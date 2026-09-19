@@ -1,0 +1,20 @@
+name: Aggiorna rassegna
+on:
+  schedule:
+    - cron: "0 5-21/2 * * *"   # ogni 2 ore dalle 7 alle 23 (ora italiana)
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python bot.py
+      - run: |
+          git config user.name "rassegna-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs/data
+          git diff --cached --quiet || (git commit -m "Rassegna $(date +%F\ %H:%M)" && git push)

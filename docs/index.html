@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rassegna Sicilia</title>
+<meta name="description" content="La rassegna stampa quotidiana della Sicilia, provincia per provincia.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍋</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f3ec;--card:#fff;--ink:#1d1b18;--muted:#6f685e;--line:#e6ded0;--accent:#c8102e;--gold:#e0a526;--chip:#efe8db;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15130f;--card:#201d18;--ink:#eee8dc;--muted:#a39a8b;--line:#34302a;--accent:#ff5a6e;--gold:#f0bb45;--chip:#2c2822;--shadow:none}}
+:root[data-theme=dark]{--bg:#15130f;--card:#201d18;--ink:#eee8dc;--muted:#a39a8b;--line:#34302a;--accent:#ff5a6e;--gold:#f0bb45;--chip:#2c2822;--shadow:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,-apple-system,sans-serif}
+a{color:inherit}
+header{background:linear-gradient(135deg,#c8102e 0%,#e0a526 100%);color:#fff;padding:22px 16px 18px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0}
+h1{font:900 clamp(28px,5vw,44px)/1 "Playfair Display",serif;margin:0;letter-spacing:-.5px}
+.sub{opacity:.9;margin-top:6px;font-size:14px}
+.bar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row+.row{margin-top:8px}
+input,select,button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+button{cursor:pointer}
+button:hover{border-color:var(--gold)}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#q{flex:1;min-width:180px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chip{white-space:nowrap;border-radius:999px;padding:5px 12px;background:var(--chip);border:1px solid transparent;font-size:13px}
+.chip.on{background:var(--accent);color:#fff}
+.chip small{opacity:.7;margin-left:3px}
+.stats{color:var(--muted);font-size:13px;margin:14px 0 4px}
+h2.prov{font:900 30px "Playfair Display",serif;margin:34px 0 4px;display:flex;align-items:baseline;gap:10px;cursor:pointer}
+h2.prov span{font:500 13px Inter;color:var(--muted)}
+h2.prov::after{content:"";flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent);align-self:center}
+h3.arg{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin:20px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;position:relative}
+.card.read{opacity:.55}
+.img{aspect-ratio:16/9;background:var(--chip) center/cover;display:flex;align-items:center;justify-content:center;font-size:38px}
+.img.ph{background:linear-gradient(135deg,var(--c1),var(--c2))}
+.body{padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.src{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+.src time{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+.t{font-weight:600;font-size:15.5px;line-height:1.35;text-decoration:none}
+.t:hover{text-decoration:underline}
+.d{color:var(--muted);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.also{font-size:12px;color:var(--muted)}
+.also a{color:var(--muted)}
+.acts{display:flex;gap:4px;margin-top:auto;padding-top:6px}
+.acts button{border:none;background:none;padding:4px 6px;font-size:15px;border-radius:8px;opacity:.7}
+.acts button:hover{opacity:1;background:var(--chip)}
+.list .grid{grid-template-columns:1fr;gap:0}
+.list .card{flex-direction:row;border-radius:0;box-shadow:none;border:none;border-bottom:1px solid var(--line);background:none}
+.list .img{width:120px;min-width:120px;aspect-ratio:4/3;font-size:24px;border-radius:8px;margin:10px 0}
+.list .d{-webkit-line-clamp:2}
+mark{background:var(--gold);color:#000;border-radius:3px;padding:0 2px}
+.empty{text-align:center;padding:60px 0;color:var(--muted)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+#top{position:fixed;right:16px;bottom:16px;border-radius:50%;width:44px;height:44px;display:none;box-shadow:var(--shadow)}
+.hidden{display:none!important}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:40px 16px}
+@media (max-width:600px){.list .img{width:84px;min-width:84px}h2.prov{font-size:24px}}
+@media print{.bar,#top,.acts,header .sub{display:none}header{background:none;color:#000;padding:0}.card{break-inside:avoid;box-shadow:none}.img{display:none}.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Rassegna Sicilia</h1>
+  <div class="sub">Le notizie di tutta l'isola, provincia per provincia · aggiornata più volte al giorno</div>
+</div></header>
+
+<div class="bar"><div class="wrap">
+  <div class="row">
+    <button data-r="oggi" class="rng on">Oggi</button>
+    <button data-r="ieri" class="rng">Ieri</button>
+    <button data-r="7" class="rng">7 giorni</button>
+    <button data-r="30" class="rng">30 giorni</button>
+    <label>Dal <input type="date" id="dal"></label>
+    <label>al <input type="date" id="al"></label>
+    <button id="prev" title="Giorno precedente">◀</button>
+    <button id="next" title="Giorno successivo">▶</button>
+  </div>
+  <div class="row">
+    <input id="q" type="search" placeholder="🔍 Cerca nelle notizie… (premi / )">
+    <select id="fonte"><option value="">Tutte le testate</option></select>
+    <select id="ord"><option value="prov">Per provincia e argomento</option><option value="arg">Per argomento</option><option value="cron">Ordine cronologico</option></select>
+    <button id="vista" title="Griglia / elenco">☰ Elenco</button>
+    <button id="soloPref" title="Mostra solo i preferiti">★ Preferiti</button>
+    <button id="nascLette" title="Nascondi notizie già lette">👁 Nascondi lette</button>
+    <button id="copia" title="Copia la rassegna come testo (per WhatsApp/email)">📋 Copia rassegna</button>
+    <button id="link" title="Copia il link con questi filtri">🔗</button>
+    <button onclick="print()" title="Stampa o salva PDF">🖨</button>
+    <button id="tema" title="Tema chiaro/scuro">🌓</button>
+  </div>
+  <div class="row chips" id="provChips"></div>
+  <div class="row chips" id="argChips"></div>
+</div></div>
+
+<main class="wrap">
+  <div class="stats" id="stats"></div>
+  <div id="out"></div>
+</main>
+<footer>Titoli e link appartengono alle rispettive testate. Rassegna generata automaticamente da feed pubblici e Google News.</footer>
+<button id="top" title="Torna su">↑</button>
+<div class="toast" id="toast"></div>
+
+<script>
+const PROV=["Sicilia","Palermo","Catania","Messina","Siracusa","Ragusa","Trapani","Agrigento","Caltanissetta","Enna"];
+const ARG={"Cronaca":["🚨","#b3261e","#e85d4a"],"Politica":["🏛️","#1f3a68","#4a6fa5"],"Economia e lavoro":["💼","#2d5a3d","#5b9a6b"],"Sport":["⚽","#0b5d8a","#3aa0d8"],"Cultura e spettacoli":["🎭","#6b2a7a","#b45fc7"],"Ambiente e meteo":["🌿","#2f6b3a","#8fc27a"],"Sanità":["🏥","#0f6e6e","#4fb3b3"],"Trasporti e infrastrutture":["🚆","#5a4a2a","#c49a4a"],"Scuola e università":["🎓","#7a4a1a","#e0a526"],"Altre notizie":["📰","#555","#999"]};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let giorni=[],cache={},news=[];
+let S={dal:"",al:"",q:"",fonte:"",ord:"prov",prov:new Set(),arg:new Set(),lista:store.get("lista",false),pref:false,nasc:false};
+let pref=store.get("pref",{}), lette=new Set(store.get("lette",[]));
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const fmtG=g=>new Date(g+"T12:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const iso=d=>d.toLocaleDateString("sv-SE");
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)};
+const idOf=n=>n.link;
+
+async function carica(g){
+  if(!cache[g]) cache[g]=fetch("data/"+g+".json?"+(g===giorni[0]?Date.now():"")).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  return cache[g];
+}
+function giorniNelRange(){return giorni.filter(g=>g>=S.dal&&g<=S.al)}
+
+async function aggiorna(){
+  $("#dal").value=S.dal;$("#al").value=S.al;
+  const gs=giorniNelRange();
+  $("#out").innerHTML='<div class="empty">Caricamento…</div>';
+  news=(await Promise.all(gs.map(carica))).flat();
+  const fonti=[...new Set(news.map(n=>n.fonte))].sort((a,b)=>a.localeCompare(b));
+  $("#fonte").innerHTML='<option value="">Tutte le testate ('+fonti.length+')</option>'+fonti.map(f=>`<option ${f===S.fonte?"selected":""}>${esc(f)}</option>`).join("");
+  render();
+}
+
+function filtrate(){
+  const q=S.q.toLowerCase().trim(), parts=q?q.split(/\s+/):[];
+  return news.filter(n=>{
+    if(S.prov.size&&!S.prov.has(n.provincia))return false;
+    if(S.arg.size&&!S.arg.has(n.argomento))return false;
+    if(S.fonte&&n.fonte!==S.fonte)return false;
+    if(S.pref&&!pref[idOf(n)])return false;
+    if(S.nasc&&lette.has(idOf(n)))return false;
+    if(parts.length){const t=(n.titolo+" "+n.desc+" "+n.fonte).toLowerCase();if(!parts.every(p=>t.includes(p)))return false}
+    return true;
+  });
+}
+function hl(s){s=esc(s);if(!S.q.trim())return s;for(const p of S.q.trim().split(/\s+/)){if(p.length<2)continue;s=s.replace(new RegExp("("+p.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>")}return s}
+
+function card(n){
+  const [ico,c1,c2]=ARG[n.argomento]||ARG["Altre notizie"];
+  const d=new Date(n.data), ora=d.toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  const img=n.img?`<div class="img" style="background-image:url('${esc(n.img)}')"></div>`:`<div class="img ph" style="--c1:${c1};--c2:${c2}">${ico}</div>`;
+  const also=n.anche?.length?`<div class="also">Anche su: ${n.anche.map(a=>`<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.fonte)}</a>`).join(", ")}</div>`:"";
+  const id=esc(idOf(n));
+  return `<article class="card ${lette.has(idOf(n))?"read":""}" data-id="${id}">${img}<div class="body">
+  <div class="src">${esc(n.fonte)} · <time>${ora}</time></div>
+  <a class="t" href="${esc(n.link)}" target="_blank" rel="noopener">${hl(n.titolo)}</a>
+  ${n.desc?`<div class="d">${hl(n.desc)}</div>`:""}${also}
+  <div class="acts"><button data-a="pref" title="Preferito">${pref[idOf(n)]?"★":"☆"}</button><button data-a="wa" title="Condividi su WhatsApp">💬</button><button data-a="share" title="Condividi">📤</button><button data-a="copy" title="Copia titolo e link">📋</button><button data-a="read" title="Segna come letta/non letta">✓</button></div>
+  </div></article>`;
+}
+
+function gruppi(lista,key,ordine){const m={};lista.forEach(n=>(m[n[key]]??=[]).push(n));return (ordine||Object.keys(m)).filter(k=>m[k]).map(k=>[k,m[k]])}
+
+function render(){
+  const f=filtrate();
+  // chips con conteggi (calcolati sul resto dei filtri)
+  const cnt=(k)=>{const c={};news.forEach(n=>c[n[k]]=(c[n[k]]||0)+1);return c};
+  const cp=cnt("provincia"),ca=cnt("argomento");
+  $("#provChips").innerHTML=`<button class="chip ${S.prov.size?"":"on"}" data-p="">Tutte le province</button>`+PROV.filter(p=>cp[p]).map(p=>`<button class="chip ${S.prov.has(p)?"on":""}" data-p="${p}">${p}<small>${cp[p]}</small></button>`).join("");
+  $("#argChips").innerHTML=`<button class="chip ${S.arg.size?"":"on"}" data-g="">Tutti gli argomenti</button>`+Object.keys(ARG).filter(a=>ca[a]).map(a=>`<button class="chip ${S.arg.has(a)?"on":""}" data-g="${a}">${ARG[a][0]} ${a}<small>${ca[a]}</small></button>`).join("");
+  const gs=giorniNelRange();
+  $("#stats").textContent=`${f.length} notizie · ${gs.length===1?fmtG(gs[0]):gs.length?`dal ${fmtG(gs.at(-1))} al ${fmtG(gs[0])}`:"nessun giorno disponibile in questo intervallo"} · ${new Set(f.map(n=>n.fonte)).size} testate`;
+  document.body.classList.toggle("list",S.lista);
+  $("#vista").textContent=S.lista?"▦ Griglia":"☰ Elenco";
+  $("#soloPref").classList.toggle("on",S.pref);$("#nascLette").classList.toggle("on",S.nasc);
+  if(!f.length){$("#out").innerHTML='<div class="empty">Nessuna notizia trovata con questi filtri.</div>';return}
+  f.sort((a,b)=>b.data.localeCompare(a.data));
+  let h="";
+  if(S.ord==="cron") h=`<div class="grid">${f.map(card).join("")}</div>`;
+  else if(S.ord==="arg") for(const [a,l] of gruppi(f,"argomento",Object.keys(ARG))) h+=`<h2 class="prov">${ARG[a][0]} ${a} <span>${l.length}</span></h2><div class="grid">${l.map(card).join("")}</div>`;
+  else for(const [p,l] of gruppi(f,"provincia",PROV)){
+    h+=`<section><h2 class="prov" title="Clicca per comprimere">${p==="Sicilia"?"Sicilia · regionale":"Provincia di "+p} <span>${l.length} notizie</span></h2><div>`;
+    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG))) h+=`<h3 class="arg">${ARG[a][0]} ${a} · ${la.length}</h3><div class="grid">${la.map(card).join("")}</div>`;
+    h+="</div></section>";
+  }
+  $("#out").innerHTML=h;
+  salvaHash();
+}
+
+function testoRassegna(){
+  const f=filtrate().sort((a,b)=>b.data.localeCompare(a.data)), gs=giorniNelRange();
+  let t=`📰 *RASSEGNA SICILIA* — ${gs.length===1?fmtG(gs[0]):`${gs.at(-1)} → ${gs[0]}`}\n`;
+  for(const [p,l] of gruppi(f,"provincia",PROV)){
+    t+=`\n🍋 *${p.toUpperCase()}*\n`;
+    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG))){t+=`\n_${a}_\n`;la.forEach(n=>t+=`• ${n.titolo} (${n.fonte})\n  ${n.link}\n`)}
+  }
+  return t;
+}
+const copia=t=>navigator.clipboard.writeText(t).then(()=>toast("Copiato negli appunti ✓"),()=>toast("Copia non riuscita"));
+
+function salvaHash(){
+  const p=new URLSearchParams();
+  p.set("dal",S.dal);p.set("al",S.al);
+  if(S.q)p.set("q",S.q);if(S.fonte)p.set("fonte",S.fonte);if(S.ord!=="prov")p.set("ord",S.ord);
+  if(S.prov.size)p.set("prov",[...S.prov].join(","));if(S.arg.size)p.set("arg",[...S.arg].join(","));
+  history.replaceState(null,"","#"+p);
+}
+function leggiHash(){
+  const p=new URLSearchParams(location.hash.slice(1));
+  if(p.get("dal"))S.dal=p.get("dal");if(p.get("al"))S.al=p.get("al");
+  S.q=p.get("q")||"";S.fonte=p.get("fonte")||"";S.ord=p.get("ord")||"prov";
+  S.prov=new Set((p.get("prov")||"").split(",").filter(Boolean));S.arg=new Set((p.get("arg")||"").split(",").filter(Boolean));
+  $("#q").value=S.q;$("#ord").value=S.ord;
+}
+function setRange(r){
+  const oggi=giorni[0]||iso(new Date());
+  $$(".rng").forEach(b=>b.classList.toggle("on",b.dataset.r===r));
+  if(r==="oggi"){S.dal=S.al=oggi}
+  else if(r==="ieri"){const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-1);S.dal=S.al=iso(d)}
+  else{const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-(+r-1));S.dal=iso(d);S.al=oggi}
+  aggiorna();
+}
+function sposta(dir){
+  const i=giorni.indexOf(S.al), j=Math.min(Math.max(i-dir,0),giorni.length-1);
+  if(i<0||!giorni[j])return; S.dal=S.al=giorni[j]; $$(".rng").forEach(b=>b.classList.remove("on")); aggiorna();
+}
+
+// eventi
+$$(".rng").forEach(b=>b.onclick=()=>setRange(b.dataset.r));
+$("#dal").onchange=e=>{S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#al").onchange=e=>{S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#prev").onclick=()=>sposta(-1);$("#next").onclick=()=>sposta(1);
+let tq;$("#q").oninput=e=>{clearTimeout(tq);tq=setTimeout(()=>{S.q=e.target.value;render()},200)};
+$("#fonte").onchange=e=>{S.fonte=e.target.value;render()};
+$("#ord").onchange=e=>{S.ord=e.target.value;render()};
+$("#vista").onclick=()=>{S.lista=!S.lista;store.set("lista",S.lista);render()};
+$("#soloPref").onclick=()=>{S.pref=!S.pref;render()};
+$("#nascLette").onclick=()=>{S.nasc=!S.nasc;render()};
+$("#copia").onclick=()=>copia(testoRassegna());
+$("#link").onclick=()=>copia(location.href);
+$("#tema").onclick=()=>{const dark=matchMedia("(prefers-color-scheme:dark)").matches;const cur=document.documentElement.dataset.theme||(dark?"dark":"light");const n=cur==="dark"?"light":"dark";document.documentElement.dataset.theme=n;store.set("tema",n)};
+if(store.get("tema"))document.documentElement.dataset.theme=store.get("tema");
+const toggle=(set,v)=>{if(!v)set.clear();else set.has(v)?set.delete(v):set.add(v);render();scrollTo({top:0})};
+$("#provChips").onclick=e=>{const b=e.target.closest("[data-p]");if(b)toggle(S.prov,b.dataset.p)};
+$("#argChips").onclick=e=>{const b=e.target.closest("[data-g]");if(b)toggle(S.arg,b.dataset.g)};
+$("#out").onclick=e=>{
+  const h=e.target.closest("h2.prov");if(h&&h.nextElementSibling){h.nextElementSibling.classList.toggle("hidden");return}
+  const c=e.target.closest(".card");if(!c)return;
+  const n=news.find(x=>idOf(x)===c.dataset.id);if(!n)return;
+  if(e.target.closest("a.t")){lette.add(idOf(n));store.set("lette",[...lette].slice(-3000));c.classList.add("read");return}
+  const a=e.target.closest("button")?.dataset.a;if(!a)return;
+  const txt=`${n.titolo} (${n.fonte})\n${n.link}`;
+  if(a==="pref"){if(pref[idOf(n)])delete pref[idOf(n)];else pref[idOf(n)]=1;store.set("pref",pref);e.target.textContent=pref[idOf(n)]?"★":"☆";toast(pref[idOf(n)]?"Aggiunta ai preferiti":"Rimossa dai preferiti")}
+  if(a==="wa")open("https://wa.me/?text="+encodeURIComponent(txt));
+  if(a==="share"){navigator.share?navigator.share({title:n.titolo,url:n.link}).catch(()=>{}):copia(txt)}
+  if(a==="copy")copia(txt);
+  if(a==="read"){lette.has(idOf(n))?lette.delete(idOf(n)):lette.add(idOf(n));store.set("lette",[...lette].slice(-3000));c.classList.toggle("read")}
+};
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,select"))return;
+  if(e.key==="/"){e.preventDefault();$("#q").focus()}
+  if(e.key==="ArrowLeft")sposta(-1);if(e.key==="ArrowRight")sposta(1);
+});
+addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none");
+$("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
+// immagini che non si caricano -> segnaposto
+new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#999;--c2:#ccc";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true});
+
+(async()=>{
+  giorni=await fetch("data/index.json?"+Date.now()).then(r=>r.json()).catch(()=>[]);
+  if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
+  if(location.hash.length>1){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");
+})();
+</script>
+</body>
+</html>
