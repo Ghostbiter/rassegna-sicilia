@@ -2,7 +2,7 @@
 """Rassegna Sicilia: raccoglie le notizie da testate siciliane + Google News,
 le classifica per provincia e argomento, elimina i duplicati (tiene la testata maggiore)
 e salva docs/data/AAAA-MM-GG.json per il sito. Solo libreria standard."""
-import urllib.request, urllib.parse, xml.etree.ElementTree as ET, html, re, json, os, sys
+import time, threading, hashlib, urllib.request, urllib.parse, xml.etree.ElementTree as ET, html, re, json, os, sys
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -116,7 +116,11 @@ def trova(testo, diz, default):
 
 def parole(t): return set(w for w in re.findall(r"\w+", t.lower()) if len(w) > 3)
 
+def ident(titolo):
+    return hashlib.sha1(re.sub(r"\W+","",titolo.lower()).encode()).hexdigest()[:12]
+
 def classifica(n):
+    n["id"] = ident(n["titolo"])
     testo = n["titolo"] + " " + n["desc"]
     n["provincia"] = trova(testo, PROVINCE, n.pop("_hint", None) or "Sicilia")
     n["argomento"] = trova(testo, ARGOMENTI, "Altre notizie")
@@ -142,6 +146,69 @@ def deduplica(notizie):
     for t in tenute: t.pop("_p", None); t.pop("_hint", None)
     return tenute
 
+UA = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
+
+def apri(url, limite=250000, timeout=15):
+    return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout).read(limite).decode("utf8","ignore")
+
+def risolvi_google(link):
+    """Da un link news.google.com risale all'indirizzo reale dell'articolo."""
+    try:
+        art = link.split("/articles/")[1].split("?")[0]
+        h = apri(link, 3000000, 20)
+        sig = re.search(r'data-n-a-sg="([^"]+)"', h).group(1)
+        ts = re.search(r'data-n-a-ts="([^"]+)"', h).group(1)
+        req = ["Fbv4je", json.dumps(["garturlreq",[["X","X",["X"],None,None,1,1,"US:en",None,1,None,None,None,None,None,0,1],
+               "X","X",1,[1,1,1],1,1,None,0,0,None,0], art, int(ts), sig]), None, "0"]
+        body = urllib.parse.urlencode({"f.req": json.dumps([[req]])}).encode()
+        r = urllib.request.urlopen(urllib.request.Request(
+            "https://news.google.com/_/DotsSplashUi/data/batchexecute", data=body,
+            headers={**UA, "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"}), timeout=25).read().decode("utf8","ignore")
+        m = re.search(r'"(https?://(?!news\.google|www\.google)[^"\\]{15,})\\?"', r)
+        return m.group(1) if m else None
+    except Exception:
+        return None
+
+def og(url):
+    """Immagine di copertina (og:image) dalla pagina dell'articolo."""
+    try:
+        h = apri(url, 300000)
+        for pat in (r'<meta[^>]+property=["\']og:image(?::url)?["\'][^>]*content=["\']([^"\']+)',
+                    r'<meta[^>]+name=["\']twitter:image["\'][^>]*content=["\']([^"\']+)',
+                    r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*property=["\']og:image'):
+            m = re.search(pat, h, re.I)
+            if m:
+                u = html.unescape(m.group(1)).strip()
+                if u.startswith("//"): u = "https:" + u
+                if u.startswith("http") and not re.search(r"logo|placeholder|default", u, re.I): return u
+    except Exception:
+        pass
+    return None
+
+# Google limita le richieste (errore 429): al massimo TETTO risoluzioni per esecuzione,
+# con una piccola pausa. Il bot gira ogni 2 ore, quindi l'archivio si completa da solo.
+TETTO = int(os.environ.get("TETTO_RISOLUZIONI", 220))
+_lock = threading.Lock()
+_contatore = [0]
+def _permesso():
+    with _lock:
+        if _contatore[0] >= TETTO: return False
+        _contatore[0] += 1
+        return True
+
+def arricchisci(n):
+    """Risolve il link Google e recupera l'immagine mancante. Ogni notizia una sola volta."""
+    if n.get("fatto"): return n
+    if "news.google.com" in n["link"]:
+        if not _permesso(): return n          # tetto raggiunto: al prossimo giro
+        time.sleep(0.6)
+        vero = risolvi_google(n["link"])
+        if vero: n["link"] = vero
+        else: return n          # riproveremo al prossimo giro
+    if not n.get("img"): n["img"] = og(n["link"])
+    n["fatto"] = 1
+    return n
+
 def main():
     with ThreadPoolExecutor(16) as ex:
         nuove = [n for lst in ex.map(scarica, FEED.items()) for n in lst]
@@ -155,6 +222,9 @@ def main():
         f = os.path.join(DIR, g + ".json")
         vecchie = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else []
         tutte = deduplica(vecchie + lst)
+        tutte.sort(key=lambda n: n["data"], reverse=True)
+        with ThreadPoolExecutor(5) as ex: tutte = list(ex.map(arricchisci, tutte))
+        print(f"  link risolti in questa esecuzione: {_contatore[0]}/{TETTO}")
         tutte.sort(key=lambda n: n["data"], reverse=True)
         json.dump(tutte, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",",":"))
         print(f"{g}: {len(tutte)} notizie")
