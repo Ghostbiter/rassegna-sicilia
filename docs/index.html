@@ -120,7 +120,9 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   .riga-alta .rng,.riga-alta #bPeriodo{display:none}
   .soloMobile-flex{display:flex;flex-wrap:nowrap;overflow-x:auto}
   #filtri .row{gap:6px}
-  #filtri select,#filtri #q{width:100%}
+  #filtri select{width:100%}
+  .riga-cerca{margin-top:7px}
+  #q{font-size:16px;padding:7px 10px}
   .datenav b{min-width:126px}
   .guida .g-grid{grid-template-columns:1fr}
   .guida{padding:10px 0}
@@ -172,6 +174,10 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
     <button id="bPeriodo" title="Scegli un periodo">📅 Periodo…</button>
   </div>
 
+  <div class="row riga-cerca">
+    <input id="q" type="search" placeholder="🔍 Cerca una parola, un comune, una testata…   (tasto / )">
+  </div>
+
   <div id="filtri">
     <div class="row soloMobile-flex">
       <button data-r="oggi" class="rng on">Oggi</button>
@@ -182,7 +188,6 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
     </div>
     <span id="periodo" class="row hidden" style="margin-bottom:8px"><b style="font-weight:600;font-size:13.5px">Dal</b> <input type="date" id="dal"> <b style="font-weight:600;font-size:13.5px">al</b> <input type="date" id="al"></span>
     <div class="row">
-      <input id="q" type="search" placeholder="🔍 Cerca una parola, un comune, una testata…   (tasto / )">
       <select id="fonte"><option value="">Tutte le testate</option></select>
       <select id="ord"><option value="prov">Raggruppa per provincia</option><option value="arg">Raggruppa per argomento</option><option value="cron">Solo ordine cronologico</option></select>
       <button id="vista" title="Cambia tra griglia ed elenco">☰ Elenco</button>
@@ -200,7 +205,7 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   <div class="stats" id="stats"></div>
   <div id="out"></div>
 </main>
-<footer>Titoli, foto e link appartengono alle rispettive testate · rassegna generata automaticamente da feed pubblici e Google News · aggiornata ogni 2 ore</footer>
+<footer>Titoli, foto e link appartengono alle rispettive testate · rassegna generata automaticamente da feed pubblici e Google News · aggiornata ogni ora</footer>
 <button id="top" title="Torna su">↑</button>
 <div class="toast" id="toast"></div>
 

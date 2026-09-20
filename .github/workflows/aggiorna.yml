@@ -1,7 +1,7 @@
 name: Aggiorna rassegna
 on:
   schedule:
-    - cron: "0 5-21/2 * * *"   # ogni 2 ore dalle 7 alle 23 (ora italiana)
+    - cron: "0 5-21 * * *"   # ogni ora, dalle 7 alle 23 (ora italiana)
   workflow_dispatch:
 permissions:
   contents: write
