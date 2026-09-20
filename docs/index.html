@@ -38,6 +38,16 @@ button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .g-grid>div span{font-size:18px;display:block;margin-bottom:2px}
 .g-grid>div b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px}
 .g-grid>div i{font-style:normal;font-weight:600;color:var(--ink)}
+.giornali{border-bottom:1px solid var(--line);padding:12px 0 14px}
+.gi-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.gi-h b{font:700 16px "Playfair Display",serif}
+.gi-h span{font-size:12.5px;color:var(--muted)}
+.gi-row{display:flex;gap:18px;overflow-x:auto;padding-bottom:4px}
+.gi-grp{min-width:max-content}
+.gi-grp h5{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700}
+.gi-grp div{display:flex;gap:6px}
+.gi-grp a{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 11px;font-size:13px;text-decoration:none;white-space:nowrap}
+.gi-grp a:hover{border-color:var(--gold)}
 .bar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .row+.row{margin-top:8px}
@@ -99,6 +109,22 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .fonti{columns:2;font-size:13.5px}.fonti a{color:var(--muted)}
 footer{color:var(--muted);font-size:12px;text-align:center;padding:44px 16px}
 kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font-family:inherit}
+.soloMobile{display:none}
+.soloMobile-flex{display:none}
+@media (max-width:760px){
+  .soloMobile{display:inline-block}
+  .bar{padding:8px 0}
+  .bar .row:first-child{flex-wrap:nowrap;overflow-x:auto}
+  #filtri{display:none;max-height:58vh;overflow:auto;padding-top:8px;margin-top:8px;border-top:1px solid var(--line)}
+  #filtri.aperto{display:block}
+  .riga-alta .rng,.riga-alta #bPeriodo{display:none}
+  .soloMobile-flex{display:flex;flex-wrap:nowrap;overflow-x:auto}
+  #filtri .row{gap:6px}
+  #filtri select,#filtri #q{width:100%}
+  .datenav b{min-width:126px}
+  .guida .g-grid{grid-template-columns:1fr}
+  .guida{padding:10px 0}
+}
 @media (max-width:640px){.list .img{width:88px;min-width:88px}h2.prov{font-size:23px}.datenav b{min-width:110px}.fonti{columns:1}}
 @media print{.bar,#top,.acts,.hbtns,header .sub,footer{display:none}header{background:none;color:#000;padding:0;border-bottom:2px solid #000}h1{color:#000}.card{break-inside:avoid;box-shadow:none;border:none;border-bottom:1px solid #ccc}.img{display:none}.grid{grid-template-columns:1fr 1fr;gap:6px}}
 </style>
@@ -126,34 +152,48 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   </div>
 </div></div>
 
+<div class="giornali"><div class="wrap">
+  <div class="gi-h"><b>🗞 Le testate, in diretta</b><span>Edizioni online, gratuite e prime pagine — si aprono sul sito dell'editore</span></div>
+  <div class="gi-row" id="gioRow"></div>
+</div></div>
+
 <div class="bar"><div class="wrap">
-  <div class="row">
+  <div class="row riga-alta">
     <div class="datenav">
       <button id="prev" title="Giorno precedente">◀</button>
       <b id="etichettaData" title="Scegli una data">—</b>
       <button id="next" title="Giorno successivo">▶</button>
     </div>
+    <button id="bFiltri" class="soloMobile">⚙ Filtri</button>
     <button data-r="oggi" class="rng on">Oggi</button>
     <button data-r="ieri" class="rng">Ieri</button>
     <button data-r="7" class="rng">Ultimi 7 giorni</button>
     <button data-r="30" class="rng">30 giorni</button>
     <button id="bPeriodo" title="Scegli un periodo">📅 Periodo…</button>
-    <span id="periodo" class="row hidden">
-      <input type="date" id="dal"> → <input type="date" id="al">
-    </span>
   </div>
-  <div class="row">
-    <input id="q" type="search" placeholder="🔍 Cerca una parola, un comune, una testata…   (tasto / )">
-    <select id="fonte"><option value="">Tutte le testate</option></select>
-    <select id="ord"><option value="prov">Raggruppa per provincia</option><option value="arg">Raggruppa per argomento</option><option value="cron">Solo ordine cronologico</option></select>
-    <button id="vista" title="Cambia tra griglia ed elenco">☰ Elenco</button>
-    <button id="nascLette" title="Nascondi le notizie che hai già aperto">👁 Nascondi lette</button>
-    <button id="copia" title="Copia tutta la rassegna come testo">📋 Copia</button>
-    <button id="link" title="Copia il link con i filtri attuali">🔗 Link</button>
-    <button onclick="print()" title="Stampa o salva in PDF">🖨</button>
+
+  <div id="filtri">
+    <div class="row soloMobile-flex">
+      <button data-r="oggi" class="rng on">Oggi</button>
+      <button data-r="ieri" class="rng">Ieri</button>
+      <button data-r="7" class="rng">Ultimi 7 giorni</button>
+      <button data-r="30" class="rng">30 giorni</button>
+      <button id="bPeriodo2" title="Scegli un periodo">📅 Periodo…</button>
+    </div>
+    <span id="periodo" class="row hidden" style="margin-bottom:8px"><b style="font-weight:600;font-size:13.5px">Dal</b> <input type="date" id="dal"> <b style="font-weight:600;font-size:13.5px">al</b> <input type="date" id="al"></span>
+    <div class="row">
+      <input id="q" type="search" placeholder="🔍 Cerca una parola, un comune, una testata…   (tasto / )">
+      <select id="fonte"><option value="">Tutte le testate</option></select>
+      <select id="ord"><option value="prov">Raggruppa per provincia</option><option value="arg">Raggruppa per argomento</option><option value="cron">Solo ordine cronologico</option></select>
+      <button id="vista" title="Cambia tra griglia ed elenco">☰ Elenco</button>
+      <button id="nascLette" title="Nascondi le notizie che hai già aperto">👁 Nascondi lette</button>
+      <button id="copia" title="Copia tutta la rassegna come testo">📋 Copia</button>
+      <button id="link" title="Copia il link con i filtri attuali">🔗 Link</button>
+      <button onclick="print()" title="Stampa o salva in PDF">🖨</button>
+    </div>
+    <div class="row chips" id="provChips"></div>
+    <div class="row chips" id="argChips"></div>
   </div>
-  <div class="row chips" id="provChips"></div>
-  <div class="row chips" id="argChips"></div>
 </div></div>
 
 <main class="wrap">
@@ -171,9 +211,6 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   <div id="elencoListe"></div>
   <div class="row" style="margin-top:16px"><button id="esporta">⬇ Salva tutte le liste in un file</button><button id="importa">⬆ Carica da file</button><input type="file" id="fileIn" accept=".json" class="hidden"></div>
 </div></dialog>
-
-<dialog id="dGiornali"><div class="dlg-h"><h3>🗞 Giornali e prime pagine</h3><button onclick="dGiornali.close()">✕</button></div>
-<div class="dlg-b" id="giornaliBody"></div></dialog>
 
 <dialog id="dAiuto"><div class="dlg-h"><h3>Guida rapida</h3><button onclick="dAiuto.close()">✕</button></div>
 <div class="dlg-b">
@@ -358,8 +395,9 @@ function sposta(dir){
 
 /* ---- eventi ---- */
 $$(".rng").forEach(b=>b.onclick=()=>setRange(b.dataset.r));
-$("#bPeriodo").onclick=()=>$("#periodo").classList.toggle("hidden");
-$("#etichettaData").onclick=()=>{$("#periodo").classList.remove("hidden");$("#dal").showPicker?.()};
+const mostraPeriodo=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.toggle("hidden")};
+$("#bPeriodo").onclick=mostraPeriodo;$("#bPeriodo2").onclick=mostraPeriodo;
+$("#etichettaData").onclick=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.remove("hidden");$("#dal").showPicker?.()};
 $("#dal").onchange=e=>{S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
 $("#al").onchange=e=>{S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
 $("#prev").onclick=()=>sposta(-1);$("#next").onclick=()=>sposta(1);
@@ -417,11 +455,15 @@ $("#elencoListe").onclick=e=>{
 $("#esporta").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(liste,null,1)],{type:"application/json"}));a.download="mie-liste-rassegna-sicilia.json";a.click();toast("File salvato ✓")};
 $("#importa").onclick=()=>$("#fileIn").click();
 $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);for(const l in d)liste[l]={...(liste[l]||{}),...d[l]};salvaListe();elencoListe();toast("Liste caricate ✓")}catch{toast("File non valido")}})};
+/* filtri a scomparsa sul telefono */
+$("#bFiltri").onclick=()=>{const f=$("#filtri").classList.toggle("aperto");$("#bFiltri").classList.toggle("on",f)};
+$("#filtri").addEventListener("click",e=>{if(e.target.closest(".chip")&&innerWidth<=760){$("#filtri").classList.remove("aperto");$("#bFiltri").classList.remove("on")}});
 /* guida in cima */
 if(store.get("guidaChiusa"))$("#guida").classList.add("hidden");
 $("#chiudiGuida").onclick=()=>{$("#guida").classList.add("hidden");store.set("guidaChiusa",1);toast("Puoi riaprirla con ? Guida")};
 /* pannelli */
-$("#bGiornali").onclick=()=>{$("#giornaliBody").innerHTML=`<p>Le edizioni online dei quotidiani e le prime pagine, da consultare a parte. I quotidiani a pagamento non sono inclusi nella rassegna.</p>`+GIORNALI.map(([t,l])=>`<h4>${t}</h4><ul>${l.map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${n}</a></li>`).join("")}</ul>`).join("");dGiornali.showModal()};
+$("#gioRow").innerHTML=GIORNALI.map(([t,l])=>`<div class="gi-grp"><h5>${t}</h5><div>${l.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("")}</div></div>`).join("");
+$("#bGiornali").onclick=()=>document.querySelector(".giornali").scrollIntoView({behavior:"smooth",block:"center"});
 $("#bAiuto").onclick=()=>{$("#guida").classList.remove("hidden");store.set("guidaChiusa",0);$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
 document.addEventListener("keydown",e=>{
   if(e.target.matches("input,select,textarea"))return;
