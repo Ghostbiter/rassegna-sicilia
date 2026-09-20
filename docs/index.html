@@ -29,6 +29,15 @@ input,select,button,textarea{font:inherit;color:var(--ink);background:var(--card
 button{cursor:pointer;transition:.15s}
 button:hover{border-color:var(--gold)}
 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.guida{background:var(--chip);border-bottom:1px solid var(--line);padding:14px 0}
+.guida .g-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.guida .g-h b{font:700 16px "Playfair Display",serif}
+.guida .g-h button{padding:5px 10px;font-size:12.5px}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
+.g-grid>div{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:12.8px;color:var(--muted);line-height:1.45}
+.g-grid>div span{font-size:18px;display:block;margin-bottom:2px}
+.g-grid>div b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px}
+.g-grid>div i{font-style:normal;font-weight:600;color:var(--ink)}
 .bar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .row+.row{margin-top:8px}
@@ -105,6 +114,18 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   </div>
 </div></header>
 
+<div class="guida" id="guida"><div class="wrap">
+  <div class="g-h"><b>Come si usa — guida veloce</b><button id="chiudiGuida" title="Nascondi la guida">Ho capito, nascondi ✕</button></div>
+  <div class="g-grid">
+    <div><span>📅</span><b>Scegli il giorno</b>Le frecce ◀ ▶ spostano di un giorno. "Periodo…" per un intervallo di date.</div>
+    <div><span>🎯</span><b>Filtra</b>Tocca una provincia o un argomento. Puoi sceglierne più di uno.</div>
+    <div><span>🔍</span><b>Cerca</b>Scrivi un comune, un nome, una parola. Le trovi evidenziate.</div>
+    <div><span>★</span><b>Salva</b>☆ per i preferiti, ✚ per metterla in una tua lista. Restano sul tuo dispositivo.</div>
+    <div><span>📋</span><b>Condividi</b>"Copia" prende tutta la rassegna come testo, pronta per WhatsApp.</div>
+    <div><span>❓</span><b>Fonti e dettagli</b>Il pulsante <i>? Guida</i> in alto riapre questa guida e mostra l'elenco delle testate.</div>
+  </div>
+</div></div>
+
 <div class="bar"><div class="wrap">
   <div class="row">
     <div class="datenav">
@@ -176,7 +197,7 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
 <script>
 const PROV=["Sicilia","Palermo","Catania","Messina","Siracusa","Ragusa","Trapani","Agrigento","Caltanissetta","Enna"];
 const ARG={"Cronaca":["🚨","#b3261e","#e85d4a"],"Politica":["🏛️","#1f3a68","#4a6fa5"],"Economia e lavoro":["💼","#2d5a3d","#5b9a6b"],"Sport":["⚽","#0b5d8a","#3aa0d8"],"Cultura e spettacoli":["🎭","#6b2a7a","#b45fc7"],"Ambiente e meteo":["🌿","#2f6b3a","#8fc27a"],"Sanità":["🏥","#0f6e6e","#4fb3b3"],"Trasporti e infrastrutture":["🚆","#5a4a2a","#c49a4a"],"Scuola e università":["🎓","#7a4a1a","#e0a526"],"Altre notizie":["📰","#555","#999"]};
-const DIRETTE=[["ANSA Sicilia","https://www.ansa.it/sicilia/"],["LiveSicilia","https://livesicilia.it"],["BlogSicilia","https://www.blogsicilia.it"],["ilSicilia","https://www.ilsicilia.it"],["NewSicilia","https://www.newsicilia.it"],["Quotidiano di Sicilia","https://qds.it"],["PalermoToday","https://www.palermotoday.it"],["CataniaToday","https://www.cataniatoday.it"],["AgrigentoNotizie","https://www.agrigentonotizie.it"],["SiracusaNews","https://www.siracusanews.it"],["RagusaNews","https://www.ragusanews.com"],["StrettoWeb","https://www.strettoweb.com"],["Tempostretto","https://www.tempostretto.it"]];
+const DIRETTE=[["Giornale di Sicilia","https://gds.it"],["La Sicilia","https://www.lasicilia.it"],["Gazzetta del Sud","https://gazzettadelsud.it"],["ANSA Sicilia","https://www.ansa.it/sicilia/"],["LiveSicilia","https://livesicilia.it"],["BlogSicilia","https://www.blogsicilia.it"],["ilSicilia","https://www.ilsicilia.it"],["NewSicilia","https://www.newsicilia.it"],["Quotidiano di Sicilia","https://qds.it"],["PalermoToday","https://www.palermotoday.it"],["CataniaToday","https://www.cataniatoday.it"],["AgrigentoNotizie","https://www.agrigentonotizie.it"],["SiracusaNews","https://www.siracusanews.it"],["RagusaNews","https://www.ragusanews.com"],["StrettoWeb","https://www.strettoweb.com"],["Tempostretto","https://www.tempostretto.it"]];
 const GIORNALI=[
  ["Quotidiani siciliani (edizione online)",[["Giornale di Sicilia","https://gds.it"],["La Sicilia","https://www.lasicilia.it"],["Gazzetta del Sud","https://gazzettadelsud.it"],["Quotidiano di Sicilia","https://qds.it"],["Il Fatto Nisseno","https://www.ilfattonisseno.it"],["La Sicilia Web","https://www.lasiciliaweb.it"]]],
  ["Gratuiti e sfogliabili online",[["Quotidiano di Sicilia — PDF gratuito","https://qds.it/edizione-digitale/"],["Il Sicilia — sfogliabile","https://www.ilsicilia.it"],["Sicilia Oggi Notizie","https://siciliaoggi.it"],["Il Mediterraneo 24","https://ilmediterraneo24.it"]]],
@@ -396,9 +417,12 @@ $("#elencoListe").onclick=e=>{
 $("#esporta").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(liste,null,1)],{type:"application/json"}));a.download="mie-liste-rassegna-sicilia.json";a.click();toast("File salvato ✓")};
 $("#importa").onclick=()=>$("#fileIn").click();
 $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);for(const l in d)liste[l]={...(liste[l]||{}),...d[l]};salvaListe();elencoListe();toast("Liste caricate ✓")}catch{toast("File non valido")}})};
+/* guida in cima */
+if(store.get("guidaChiusa"))$("#guida").classList.add("hidden");
+$("#chiudiGuida").onclick=()=>{$("#guida").classList.add("hidden");store.set("guidaChiusa",1);toast("Puoi riaprirla con ? Guida")};
 /* pannelli */
 $("#bGiornali").onclick=()=>{$("#giornaliBody").innerHTML=`<p>Le edizioni online dei quotidiani e le prime pagine, da consultare a parte. I quotidiani a pagamento non sono inclusi nella rassegna.</p>`+GIORNALI.map(([t,l])=>`<h4>${t}</h4><ul>${l.map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${n}</a></li>`).join("")}</ul>`).join("");dGiornali.showModal()};
-$("#bAiuto").onclick=()=>{$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
+$("#bAiuto").onclick=()=>{$("#guida").classList.remove("hidden");store.set("guidaChiusa",0);$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
 document.addEventListener("keydown",e=>{
   if(e.target.matches("input,select,textarea"))return;
   if(e.key==="/"){e.preventDefault();$("#q").focus()}

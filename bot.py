@@ -40,8 +40,19 @@ PRIORITA = {
  "sky tg24":88,"il sole 24 ore":88,"la stampa":85,"il fatto quotidiano":84,"agi":84,"adnkronos":83,"tgcom24":82,
  "livesicilia":80,"quotidiano di sicilia":78,"qds":78,"gazzetta del sud":80,"blogsicilia":72,"il sicilia":70,"ilsicilia":70,
  "palermotoday":70,"cataniatoday":70,"messinatoday":70,"agrigentonotizie":68,"newsicilia":66,"strettoweb":66,"tempostretto":66,
- "tp24":64,"siracusanews":62,"ragusanews":62,"seguonews":60,"lasicilia":95,"catania today":70,"palermo today":70,
+ "tp24":64,"siracusanews":62,"ragusanews":62,"seguonews":60,"gazzettadelsud":80,"lasicilia":95,"catania today":70,"palermo today":70,
 }
+NOMI = {"lasicilia.it":"La Sicilia","gds.it":"Giornale di Sicilia","qds.it":"Quotidiano di Sicilia",
+        "ansa.it":"ANSA","repubblica.it":"la Repubblica","corriere.it":"Corriere della Sera",
+        "rainews.it":"Rai News","ilsicilia.it":"ilSicilia","livesicilia.it":"LiveSicilia",
+        "blogsicilia.it":"BlogSicilia","newsicilia.it":"NewSicilia","tp24.it":"Tp24"}
+def nome_testata(f):
+    """Nomi puliti: da 'lasicilia.it' a 'La Sicilia'."""
+    f = (f or "").strip()
+    if f.lower() in NOMI: return NOMI[f.lower()]
+    m = re.fullmatch(r"(?:www\.)?([a-z0-9-]+)\.(?:it|com|eu|net|org|tv|info)", f.lower())
+    return m.group(1).replace("-", " ").title() if m else f
+
 def priorita(fonte):
     f = fonte.lower()
     return max((v for k, v in PRIORITA.items() if k in f), default=30)
@@ -61,11 +72,20 @@ FEED = {
  "StrettoWeb":"https://www.strettoweb.com/feed/",
  "Tempostretto":"https://www.tempostretto.it/feed",
 }
+# Giornale di Sicilia: un feed per ogni provincia
+for _p, _slug in [("Sicilia","sicilia"),("Palermo","palermo"),("Catania","catania"),("Messina","messina"),
+                  ("Siracusa","siracusa"),("Ragusa","ragusa"),("Trapani","trapani"),("Agrigento","agrigento"),
+                  ("Caltanissetta","caltanissetta"),("Enna","enna")]:
+    FEED[f"Giornale di Sicilia|{_p}"] = f"https://feedpress.me/gds_hp_{_slug}"
+# Testate senza feed proprio: le seguiamo con una ricerca mirata su Google News
+SENZA_FEED = {"La Sicilia":"lasicilia.it", "Gazzetta del Sud":"gazzettadelsud.it"}
 GQ = {p: " OR ".join(f'"{c}"' for c in ([p] + PROVINCE[p][1:4])) for p in PROVINCE}
 GQ["Vittoria"] = '"Vittoria" Ragusa'
 GQ["Sicilia"] = '"Sicilia" OR siciliano OR siciliana'
 for p in ["Palermo","Catania","Messina"]:
     GQ[p + " città"] = f'"{p}"'
+for _nome, _dominio in SENZA_FEED.items():
+    GQ[f"sito {_dominio}"] = f"site:{_dominio}"
 for k, q in GQ.items():
     FEED[f"GN {k}"] = "https://news.google.com/rss/search?" + urllib.parse.urlencode(
         {"q": f"({q}) when:1d", "hl":"it","gl":"IT","ceid":"IT:it"})
@@ -91,6 +111,8 @@ def scarica(nome_url):
     except Exception as e:
         print("ERR", nome, str(e)[:70]); return []
     k = nome[3:].replace(" città","")
+    if "|" in nome:                      # es. "Giornale di Sicilia|Catania"
+        nome, k = nome.split("|")
     hint = k if k in PROVINCE else ("Ragusa" if k == "Vittoria" else None)
     out = []
     for it in root.iter("item"):
@@ -124,6 +146,7 @@ def classifica(n):
     testo = n["titolo"] + " " + n["desc"]
     n["provincia"] = trova(testo, PROVINCE, n.pop("_hint", None) or "Sicilia")
     n["argomento"] = trova(testo, ARGOMENTI, "Altre notizie")
+    n["fonte"] = nome_testata(n["fonte"])
     n["peso"] = priorita(n["fonte"])
     return n
 
