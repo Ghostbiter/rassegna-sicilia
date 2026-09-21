@@ -479,11 +479,12 @@ $("#bAggiorna").onclick=async()=>{
   b.classList.remove("gira");
   const esito = nuove>0 ? `✓ ${nuove} notizie nuove`
               : min>150 ? `⚠️ Ferma da ${Math.round(min/60)} ore`
-              : "✓ Già aggiornato";
+              : "✓ Sei all'ultima raccolta";
   b.textContent=esito; b.classList.add("esito");
+  const ora=ultimoAgg?ultimoAgg.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"";
   toast(nuove>0 ? `${nuove} notizie nuove, eccole ✓`
-       : min>150 ? `Nessuna novità: la raccolta automatica è ferma da ${Math.round(min/60)} ore`
-       : `Nessuna novità: hai già le ultime notizie (${news.length} oggi)`);
+       : min>150 ? `La raccolta automatica è ferma dalle ${ora}: nessun dato nuovo da mostrare`
+       : `Hai l'ultima raccolta, quella delle ${ora}. La prossima arriva entro un'ora.`);
   setTimeout(()=>{b.textContent="↻ Aggiorna";b.classList.remove("esito");b.disabled=false},3500);
 };
 
