@@ -241,6 +241,7 @@ def main():
         g = n["data"][:10]
         if g >= limite.isoformat(): per_giorno.setdefault(g, []).append(classifica(n))
     os.makedirs(DIR, exist_ok=True)
+    conteggi = {}
     for g, lst in per_giorno.items():
         f = os.path.join(DIR, g + ".json")
         vecchie = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else []
@@ -250,11 +251,12 @@ def main():
         print(f"  link risolti in questa esecuzione: {_contatore[0]}/{TETTO}")
         tutte.sort(key=lambda n: n["data"], reverse=True)
         json.dump(tutte, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",",":"))
+        conteggi[g] = len(tutte)
         print(f"{g}: {len(tutte)} notizie")
     giorni = sorted((x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)), reverse=True)
     json.dump(giorni, open(os.path.join(DIR, "index.json"), "w"))
     json.dump({"aggiornato": datetime.now(ROMA).isoformat(timespec="minutes"),
-               "notizie_oggi": len(per_giorno.get(datetime.now(ROMA).date().isoformat(), []))},
+               "notizie_oggi": conteggi.get(datetime.now(ROMA).date().isoformat(), 0)},
               open(os.path.join(DIR, "stato.json"), "w"))
 
 if __name__ == "__main__":
