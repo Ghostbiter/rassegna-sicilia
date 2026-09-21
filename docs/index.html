@@ -133,7 +133,7 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
 </head>
 <body>
 <header><div class="wrap htop">
-  <div><h1>Rassegna Sicilia</h1><div class="sub">Le notizie di tutta l'isola, provincia per provincia</div></div>
+  <div><h1>Rassegna Sicilia</h1><div class="sub">Le notizie di tutta l'isola, provincia per provincia · <span id="statoAgg">—</span></div></div>
   <div class="hbtns">
     <button id="bListe" title="Le tue liste e i preferiti">★ Le mie liste</button>
     <button id="bGiornali" title="Giornali e prime pagine">🗞 Giornali</button>
@@ -324,6 +324,8 @@ function render(){
   document.body.classList.toggle("list",!S.griglia);
   $("#vista").textContent=S.griglia?"☰ Elenco":"▦ Griglia";
   $("#nascLette").classList.toggle("on",S.nasc);
+  if(f.length&&f.length<15&&!S.vista&&!S.q&&!S.prov.size&&!S.arg.size&&!S.fonte)
+    $("#stats").innerHTML+=` <span class="pill" style="background:#f6d6a8;color:#5a3a00">⚠️ Poche notizie per questo giorno: la raccolta automatica è in ritardo, riprova tra poco</span>`;
   if(!f.length){$("#out").innerHTML=`<div class="empty"><b>Nessuna notizia qui</b>${S.vista?"Aggiungi notizie con il pulsante ✚":"Prova ad allargare il periodo o a togliere qualche filtro."}</div>`;salvaHash();return}
   f.sort((a,b)=>b.data.localeCompare(a.data));
   let h="";
@@ -479,7 +481,18 @@ addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none"
 $("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
 new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true,subtree:true});
 
+async function statoAggiornamento(){
+  try{
+    const s=await fetch("data/stato.json?v="+Date.now()).then(r=>r.json());
+    const min=Math.round((Date.now()-new Date(s.aggiornato))/60000);
+    const q=min<90?"":min<240?" ⚠️":" ⚠️";
+    $("#statoAgg").textContent=(min<90?"aggiornata ":"ultimo aggiornamento ")+
+      (min<60?min+" minuti fa":min<1440?Math.round(min/60)+" ore fa":Math.round(min/1440)+" giorni fa")+q;
+    if(min>240)$("#statoAgg").title="Il raccoglitore automatico è in ritardo: le notizie più recenti potrebbero mancare.";
+  }catch{}
+}
 (async()=>{
+  statoAggiornamento();
   giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]);
   if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
   if(location.hash.length>1){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");

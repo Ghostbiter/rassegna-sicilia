@@ -253,6 +253,9 @@ def main():
         print(f"{g}: {len(tutte)} notizie")
     giorni = sorted((x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)), reverse=True)
     json.dump(giorni, open(os.path.join(DIR, "index.json"), "w"))
+    json.dump({"aggiornato": datetime.now(ROMA).isoformat(timespec="minutes"),
+               "notizie_oggi": len(per_giorno.get(datetime.now(ROMA).date().isoformat(), []))},
+              open(os.path.join(DIR, "stato.json"), "w"))
 
 if __name__ == "__main__":
     main()

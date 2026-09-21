@@ -1,10 +1,15 @@
 name: Aggiorna rassegna
 on:
   schedule:
-    - cron: "0 5-21 * * *"   # ogni ora, dalle 7 alle 23 (ora italiana)
+    # GitHub salta spesso le esecuzioni programmate sui progetti gratuiti:
+    # ne chiediamo una ogni 20 minuti così almeno una per ora va a buon fine.
+    - cron: "*/20 4-22 * * *"
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: rassegna
+  cancel-in-progress: false
 jobs:
   aggiorna:
     runs-on: ubuntu-latest
