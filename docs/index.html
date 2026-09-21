@@ -135,6 +135,7 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
 <header><div class="wrap htop">
   <div><h1>Rassegna Sicilia</h1><div class="sub">Le notizie di tutta l'isola, provincia per provincia · <span id="statoAgg">—</span></div></div>
   <div class="hbtns">
+    <button id="bAggiorna" title="Ricarica le notizie più recenti">↻ Aggiorna</button>
     <button id="bListe" title="Le tue liste e i preferiti">★ Le mie liste</button>
     <button id="bGiornali" title="Giornali e prime pagine">🗞 Giornali</button>
     <button id="bAiuto" title="Guida e fonti">? Guida</button>
@@ -462,6 +463,21 @@ $("#elencoListe").onclick=e=>{
 $("#esporta").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(liste,null,1)],{type:"application/json"}));a.download="mie-liste-rassegna-sicilia.json";a.click();toast("File salvato ✓")};
 $("#importa").onclick=()=>$("#fileIn").click();
 $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);for(const l in d)liste[l]={...(liste[l]||{}),...d[l]};salvaListe();elencoListe();toast("Liste caricate ✓")}catch{toast("File non valido")}})};
+/* pulsante Aggiorna: rilegge i dati dal server */
+$("#bAggiorna").onclick=async()=>{
+  const b=$("#bAggiorna"), prima=news.length;
+  b.disabled=true; b.textContent="↻ Controllo…";
+  giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni);
+  cache={};                                   // svuota la copia in memoria
+  await statoAggiornamento();
+  await aggiorna();
+  const nuove=news.length-prima;
+  b.disabled=false; b.textContent="↻ Aggiorna";
+  const min=ritardoMinuti();
+  toast(nuove>0 ? `${nuove} notizie nuove ✓`
+       : min>150 ? `Nessuna novità: la raccolta è ferma da ${Math.round(min/60)} ore`
+       : "Sei già aggiornato ✓");
+};
 /* filtri a scomparsa sul telefono */
 $("#bFiltri").onclick=()=>{const f=$("#filtri").classList.toggle("aperto");$("#bFiltri").classList.toggle("on",f)};
 $("#filtri").addEventListener("click",e=>{if(e.target.closest(".chip")&&innerWidth<=760){$("#filtri").classList.remove("aperto");$("#bFiltri").classList.remove("on")}});
@@ -481,10 +497,13 @@ addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none"
 $("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
 new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true,subtree:true});
 
+let ultimoAgg=null;
+const ritardoMinuti=()=>ultimoAgg?Math.round((Date.now()-ultimoAgg)/60000):0;
 async function statoAggiornamento(){
   try{
     const s=await fetch("data/stato.json?v="+Date.now()).then(r=>r.json());
-    const min=Math.round((Date.now()-new Date(s.aggiornato))/60000);
+    ultimoAgg=new Date(s.aggiornato);
+    const min=ritardoMinuti();
     const q=min<90?"":min<240?" ⚠️":" ⚠️";
     $("#statoAgg").textContent=(min<90?"aggiornata ":"ultimo aggiornamento ")+
       (min<60?min+" minuti fa":min<1440?Math.round(min/60)+" ore fa":Math.round(min/1440)+" giorni fa")+q;
