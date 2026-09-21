@@ -25,6 +25,9 @@ h1{font:900 clamp(26px,4.4vw,40px)/1 "Playfair Display",serif;margin:0;letter-sp
 .hbtns{display:flex;gap:8px}
 .hbtns button{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
 .hbtns button:hover{background:rgba(255,255,255,.3)}
+#bAggiorna.gira{animation:pulsa .8s ease-in-out infinite}
+#bAggiorna.esito{background:rgba(255,255,255,.92);color:#8a1020;font-weight:600}
+@keyframes pulsa{50%{opacity:.5}}
 input,select,button,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
 button{cursor:pointer;transition:.15s}
 button:hover{border-color:var(--gold)}
@@ -67,7 +70,7 @@ h2.prov span{font:500 13px Inter;color:var(--muted)}
 h2.prov::after{content:"";flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
 h3.arg{font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin:22px 0 10px;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:15px}
-.card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column}
+.card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;content-visibility:auto;contain-intrinsic-size:auto 330px}
 .card.read{opacity:.5}
 .img{aspect-ratio:16/9;background:var(--chip) center/cover;display:flex;align-items:center;justify-content:center;font-size:40px}
 .img.ph{background:linear-gradient(135deg,var(--c1),var(--c2))}
@@ -465,19 +468,25 @@ $("#importa").onclick=()=>$("#fileIn").click();
 $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);for(const l in d)liste[l]={...(liste[l]||{}),...d[l]};salvaListe();elencoListe();toast("Liste caricate ✓")}catch{toast("File non valido")}})};
 /* pulsante Aggiorna: rilegge i dati dal server */
 $("#bAggiorna").onclick=async()=>{
-  const b=$("#bAggiorna"), prima=news.length;
-  b.disabled=true; b.textContent="↻ Controllo…";
+  const b=$("#bAggiorna"), prima=news.length, t0=Date.now();
+  b.disabled=true; b.classList.add("gira"); b.textContent="↻ Controllo…";
   giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni);
   cache={};                                   // svuota la copia in memoria
   await statoAggiornamento();
   await aggiorna();
-  const nuove=news.length-prima;
-  b.disabled=false; b.textContent="↻ Aggiorna";
-  const min=ritardoMinuti();
-  toast(nuove>0 ? `${nuove} notizie nuove ✓`
-       : min>150 ? `Nessuna novità: la raccolta è ferma da ${Math.round(min/60)} ore`
-       : "Sei già aggiornato ✓");
+  const nuove=news.length-prima, min=ritardoMinuti();
+  await new Promise(r=>setTimeout(r,Math.max(0,600-(Date.now()-t0))));   // il riscontro si deve vedere
+  b.classList.remove("gira");
+  const esito = nuove>0 ? `✓ ${nuove} notizie nuove`
+              : min>150 ? `⚠️ Ferma da ${Math.round(min/60)} ore`
+              : "✓ Già aggiornato";
+  b.textContent=esito; b.classList.add("esito");
+  toast(nuove>0 ? `${nuove} notizie nuove, eccole ✓`
+       : min>150 ? `Nessuna novità: la raccolta automatica è ferma da ${Math.round(min/60)} ore`
+       : `Nessuna novità: hai già le ultime notizie (${news.length} oggi)`);
+  setTimeout(()=>{b.textContent="↻ Aggiorna";b.classList.remove("esito");b.disabled=false},3500);
 };
+
 /* filtri a scomparsa sul telefono */
 $("#bFiltri").onclick=()=>{const f=$("#filtri").classList.toggle("aperto");$("#bFiltri").classList.toggle("on",f)};
 $("#filtri").addEventListener("click",e=>{if(e.target.closest(".chip")&&innerWidth<=760){$("#filtri").classList.remove("aperto");$("#bFiltri").classList.remove("on")}});
@@ -497,6 +506,8 @@ addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none"
 $("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
 new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true,subtree:true});
 
+const tempoFa=m=>m<1?"adesso":m===1?"1 minuto fa":m<60?m+" minuti fa":
+  m<120?"1 ora fa":m<1440?Math.round(m/60)+" ore fa":m<2880?"ieri":Math.round(m/1440)+" giorni fa";
 let ultimoAgg=null;
 const ritardoMinuti=()=>ultimoAgg?Math.round((Date.now()-ultimoAgg)/60000):0;
 async function statoAggiornamento(){
@@ -506,7 +517,7 @@ async function statoAggiornamento(){
     const min=ritardoMinuti();
     const q=min<90?"":min<240?" ⚠️":" ⚠️";
     $("#statoAgg").textContent=(min<90?"aggiornata ":"ultimo aggiornamento ")+
-      (min<60?min+" minuti fa":min<1440?Math.round(min/60)+" ore fa":Math.round(min/1440)+" giorni fa")+q;
+      tempoFa(min)+q;
     if(min>240)$("#statoAgg").title="Il raccoglitore automatico è in ritardo: le notizie più recenti potrebbero mancare.";
   }catch{}
 }
