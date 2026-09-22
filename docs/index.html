@@ -115,6 +115,9 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
 .soloMobile{display:none}
 .soloMobile-flex{display:none}
 @media (max-width:760px){
+  .htop{flex-direction:column;align-items:stretch;gap:10px}
+  .hbtns{flex-wrap:wrap;gap:6px}
+  .hbtns button{flex:1 0 auto;white-space:nowrap;padding:9px 12px;font-size:13.5px}
   .soloMobile{display:inline-block}
   .bar{padding:8px 0}
   .bar .row:first-child{flex-wrap:nowrap;overflow-x:auto}
@@ -139,7 +142,7 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   <div><h1>Rassegna Sicilia</h1><div class="sub">Le notizie di tutta l'isola, provincia per provincia · <span id="statoAgg">—</span></div></div>
   <div class="hbtns">
     <button id="bAggiorna" title="Ricarica le notizie più recenti">↻ Aggiorna</button>
-    <button id="bListe" title="Le tue liste e i preferiti">★ Le mie liste</button>
+    <button id="bListe" title="Le tue liste e i preferiti">★ <span id="nListe">Le mie liste</span></button>
     <button id="bGiornali" title="Giornali e prime pagine">🗞 Giornali</button>
     <button id="bAiuto" title="Guida e fonti">? Guida</button>
     <button id="tema" title="Tema chiaro o scuro">🌓</button>
@@ -258,7 +261,12 @@ let giorni=[],cache={},news=[];
 let S={dal:"",al:"",q:"",fonte:"",ord:"prov",prov:new Set(),arg:new Set(),griglia:!store.get("lista",false),nasc:false,vista:""};
 let liste=store.get("liste",{"Preferiti":{}}), lette=new Set(store.get("lette",[]));
 if(!liste["Preferiti"])liste["Preferiti"]={};
-const salvaListe=()=>store.set("liste",liste);
+const salvaListe=()=>{store.set("liste",liste);etichettaListe()};
+function etichettaListe(){
+  const n=Object.values(liste).reduce((s,l)=>s+Object.keys(l).length,0);
+  const e=document.getElementById("nListe");
+  if(e) e.textContent = n ? `Le mie liste (${n})` : "Le mie liste";
+}
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 const fmtG=g=>new Date(g+"T12:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"});
 const iso=d=>d.toLocaleDateString("sv-SE");
@@ -530,6 +538,7 @@ async function statoAggiornamento(){
   }catch{}
 }
 (async()=>{
+  etichettaListe();
   statoAggiornamento();
   giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]);
   if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
