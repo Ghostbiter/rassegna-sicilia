@@ -255,9 +255,23 @@ def main():
         print(f"{g}: {len(tutte)} notizie")
     giorni = sorted((x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)), reverse=True)
     json.dump(giorni, open(os.path.join(DIR, "index.json"), "w"))
-    json.dump({"aggiornato": datetime.now(ROMA).isoformat(timespec="minutes"),
-               "notizie_oggi": conteggi.get(datetime.now(ROMA).date().isoformat(), 0)},
-              open(os.path.join(DIR, "stato.json"), "w"))
+    # battito: chi ha fatto la raccolta e quando. Serve a capire a colpo d'occhio
+    # se GitHub sta lavorando anche quando il Mac è spento.
+    origine = "GitHub" if os.environ.get("GITHUB_ACTIONS") else "Mac"
+    adesso = datetime.now(ROMA)
+    f_stato = os.path.join(DIR, "stato.json")
+    try:
+        storico = json.load(open(f_stato)).get("storico", [])
+    except Exception:
+        storico = []
+    storico.insert(0, {"ora": adesso.isoformat(timespec="minutes"), "origine": origine,
+                       "notizie": conteggi.get(adesso.date().isoformat(), 0)})
+    json.dump({"aggiornato": adesso.isoformat(timespec="minutes"),
+               "origine": origine,
+               "notizie_oggi": conteggi.get(adesso.date().isoformat(), 0),
+               "storico": storico[:12]},
+              open(f_stato, "w"))
+    print(f"battito: raccolta delle {adesso:%H:%M} da {origine}")
 
 if __name__ == "__main__":
     main()

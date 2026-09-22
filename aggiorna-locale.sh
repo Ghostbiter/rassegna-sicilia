@@ -1,18 +1,30 @@
 #!/bin/zsh
-# Aggiorna la rassegna dal Mac e pubblica online.
-# Avviato ogni ora da ~/Library/LaunchAgents/com.rassegnasicilia.aggiorna.plist
+# Aggiorna la rassegna dal Mac e pubblica online. Ogni ora, avviato da
+# ~/Library/LaunchAgents/com.rassegnasicilia.aggiorna.plist
+#
+# IMPORTANTE: lavora su una copia propria, sul disco interno, perché macOS
+# vieta ai lavori automatici di leggere i dischi esterni. La copia si tiene
+# allineata da sola con GitHub, quindi resta identica a questa cartella.
+# Dopo aver modificato questo file, reinstalla con ./installa-avvio-automatico.sh
 set -u
-CARTELLA="/Users/marcellopardo/rassegna-sicilia"
+REPO="$HOME/Library/Application Support/rassegna-sicilia/repo"
+ORIGINE="https://github.com/Ghostbiter/rassegna-sicilia.git"
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-cd "$CARTELLA" || exit 1
 
 echo "===== $(date '+%d/%m %H:%M') ====="
 
-# se non c'è rete, non ha senso continuare
+# senza rete non si fa nulla: ci penserà GitHub
 ping -c1 -t5 github.com >/dev/null 2>&1 || { echo "niente rete, salto"; exit 0; }
 
-# allineo la copia locale; --autostash regge anche con modifiche in corso,
-# e se i JSON generati divergono tengo quelli gia' online
+# prima volta: mi creo la copia di lavoro
+if [ ! -d "$REPO/.git" ]; then
+  echo "creo la copia di lavoro sul disco interno..."
+  mkdir -p "$(dirname "$REPO")"
+  git clone -q "$ORIGINE" "$REPO" || { echo "clone fallito"; exit 1; }
+fi
+cd "$REPO" || exit 1
+
+# mi allineo a quello che c'è online (compreso quello che ha fatto GitHub)
 if ! git pull --rebase --autostash -q origin main 2>/dev/null; then
   echo "conflitto sui dati: tengo la versione online"
   git checkout --theirs docs/data/*.json 2>/dev/null

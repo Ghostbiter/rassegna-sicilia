@@ -234,6 +234,9 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   </ul>
   <h4>Come sono organizzate</h4>
   <p>Ogni notizia viene assegnata a una provincia e a un argomento in base alle parole del titolo. Quando più testate danno la stessa notizia, la rassegna mostra quella della testata maggiore e sotto elenca le altre in "Anche su".</p>
+  <h4>Ultime raccolte</h4>
+  <p>La rassegna si aggiorna da due parti: <b>GitHub</b>, che lavora sempre anche a computer spento, e il <b>Mac</b> di Marcello quando è acceso.</p>
+  <div id="battito" style="font-size:13px"></div>
   <h4>Testate seguite direttamente</h4>
   <div class="fonti" id="fontiDirette"></div>
   <h4>E tutte le altre</h4>
@@ -497,7 +500,10 @@ $("#chiudiGuida").onclick=()=>{$("#guida").classList.add("hidden");store.set("gu
 /* pannelli */
 $("#gioRow").innerHTML=GIORNALI.map(([t,l])=>`<div class="gi-grp"><h5>${t}</h5><div>${l.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("")}</div></div>`).join("");
 $("#bGiornali").onclick=()=>document.querySelector(".giornali").scrollIntoView({behavior:"smooth",block:"center"});
-$("#bAiuto").onclick=()=>{$("#guida").classList.remove("hidden");store.set("guidaChiusa",0);$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
+$("#bAiuto").onclick=()=>{
+  $("#battito").innerHTML=storicoRaccolte.length
+    ? storicoRaccolte.map(r=>`<div style="display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)"><b style="min-width:112px;font-weight:600">${new Date(r.ora).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</b><span style="color:var(--accent);min-width:60px">${r.origine||"?"}</span><span style="color:var(--muted)">${r.notizie} notizie</span></div>`).join("")
+    : "<p>Nessun dato sulle raccolte precedenti.</p>";$("#guida").classList.remove("hidden");store.set("guidaChiusa",0);$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
 document.addEventListener("keydown",e=>{
   if(e.target.matches("input,select,textarea"))return;
   if(e.key==="/"){e.preventDefault();$("#q").focus()}
@@ -509,7 +515,7 @@ new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.datase
 
 const tempoFa=m=>m<1?"adesso":m===1?"1 minuto fa":m<60?m+" minuti fa":
   m<120?"1 ora fa":m<1440?Math.round(m/60)+" ore fa":m<2880?"ieri":Math.round(m/1440)+" giorni fa";
-let ultimoAgg=null;
+let ultimoAgg=null, storicoRaccolte=[];
 const ritardoMinuti=()=>ultimoAgg?Math.round((Date.now()-ultimoAgg)/60000):0;
 async function statoAggiornamento(){
   try{
@@ -518,7 +524,8 @@ async function statoAggiornamento(){
     const min=ritardoMinuti();
     const q=min<90?"":min<240?" ⚠️":" ⚠️";
     $("#statoAgg").textContent=(min<90?"aggiornata ":"ultimo aggiornamento ")+
-      tempoFa(min)+q;
+      tempoFa(min)+(s.origine?" (da "+s.origine+")":"")+q;
+    storicoRaccolte=s.storico||[];
     if(min>240)$("#statoAgg").title="Il raccoglitore automatico è in ritardo: le notizie più recenti potrebbero mancare.";
   }catch{}
 }
