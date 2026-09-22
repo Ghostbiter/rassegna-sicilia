@@ -124,6 +124,10 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   #filtri{display:none;max-height:58vh;overflow:auto;padding-top:8px;margin-top:8px;border-top:1px solid var(--line)}
   #filtri.aperto{display:block}
   .riga-alta .rng,.riga-alta #bPeriodo{display:none}
+  .riga-alta>*{flex:0 0 auto;white-space:nowrap}
+  .riga-alta .breve{display:inline-block;font-size:13px;padding:8px 10px}
+  .riga-alta .breve span{display:none}
+  .riga-alta .breve::after{content:attr(data-corto)}
   .soloMobile-flex{display:flex;flex-wrap:nowrap;overflow-x:auto}
   #filtri .row{gap:6px}
   #filtri select{width:100%}
@@ -174,6 +178,8 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
       <button id="next" title="Giorno successivo">▶</button>
     </div>
     <button id="bFiltri" class="soloMobile">⚙ Filtri</button>
+    <button data-r="h1" class="rng breve" data-corto="⚡ 1 ora"><span>⚡ Ultima ora</span></button>
+    <button data-r="h3" class="rng breve" data-corto="3 ore"><span>Ultime 3 ore</span></button>
     <button data-r="oggi" class="rng on">Oggi</button>
     <button data-r="ieri" class="rng">Ieri</button>
     <button data-r="7" class="rng">Ultimi 7 giorni</button>
@@ -187,6 +193,8 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
 
   <div id="filtri">
     <div class="row soloMobile-flex">
+      <button data-r="h1" class="rng">⚡ Ultima ora</button>
+      <button data-r="h3" class="rng">Ultime 3 ore</button>
       <button data-r="oggi" class="rng on">Oggi</button>
       <button data-r="ieri" class="rng">Ieri</button>
       <button data-r="7" class="rng">Ultimi 7 giorni</button>
@@ -258,7 +266,7 @@ const GIORNALI=[
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const store={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{toast("Spazio esaurito sul dispositivo")}}};
 let giorni=[],cache={},news=[];
-let S={dal:"",al:"",q:"",fonte:"",ord:"prov",prov:new Set(),arg:new Set(),griglia:!store.get("lista",false),nasc:false,vista:""};
+let S={dal:"",al:"",q:"",fonte:"",ord:"prov",ore:0,prov:new Set(),arg:new Set(),griglia:!store.get("lista",false),nasc:false,vista:""};
 let liste=store.get("liste",{"Preferiti":{}}), lette=new Set(store.get("lette",[]));
 if(!liste["Preferiti"])liste["Preferiti"]={};
 const salvaListe=()=>{store.set("liste",liste);etichettaListe()};
@@ -283,7 +291,8 @@ const giorniNelRange=()=>giorni.filter(g=>g>=S.dal&&g<=S.al);
 async function aggiorna(){
   $("#dal").value=S.dal;$("#al").value=S.al;
   const gs=giorniNelRange();
-  $("#etichettaData").textContent=S.dal===S.al?fmtG(S.dal):`${fmtG(S.dal)} → ${fmtG(S.al)}`;
+  $("#etichettaData").textContent=S.ore?(S.ore===1?"ultima ora":"ultime 3 ore")
+    :S.dal===S.al?fmtG(S.dal):`${fmtG(S.dal)} → ${fmtG(S.al)}`;
   if(!S.vista)$("#out").innerHTML='<div class="empty">Caricamento…</div>';
   news=(await Promise.all(gs.map(carica))).flat();
   const fonti=[...new Set(news.map(n=>n.fonte))].sort((a,b)=>a.localeCompare(b));
@@ -294,7 +303,9 @@ async function aggiorna(){
 function base(){ return S.vista ? Object.values(liste[S.vista]||{}) : news }
 function filtrate(){
   const parts=S.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const limite=S.ore?Date.now()-S.ore*3600000:0;
   return base().filter(n=>{
+    if(limite&&new Date(n.data)<limite)return false;
     if(S.prov.size&&!S.prov.has(n.provincia))return false;
     if(S.arg.size&&!S.arg.has(n.argomento))return false;
     if(S.fonte&&n.fonte!==S.fonte)return false;
@@ -332,8 +343,9 @@ function render(){
   $("#provChips").innerHTML=`<button class="chip ${S.prov.size?"":"on"}" data-p="">Tutta la Sicilia</button>`+PROV.filter(p=>cp[p]).map(p=>`<button class="chip ${S.prov.has(p)?"on":""}" data-p="${p}">${p==="Sicilia"?"Regionale":p}<small>${cp[p]}</small></button>`).join("");
   $("#argChips").innerHTML=`<button class="chip ${S.arg.size?"":"on"}" data-g="">Tutti gli argomenti</button>`+Object.keys(ARG).filter(a=>ca[a]).map(a=>`<button class="chip ${S.arg.has(a)?"on":""}" data-g="${a}">${ARG[a][0]} ${a}<small>${ca[a]}</small></button>`).join("");
   const gs=giorniNelRange(), attivi=[...S.prov,...S.arg,S.fonte].filter(Boolean);
+  const etichettaPeriodo=S.ore===1?"nell'ultima ora":S.ore===3?"nelle ultime 3 ore":null;
   $("#stats").innerHTML=(S.vista?`<b>Lista «${esc(S.vista)}» · ${f.length===1?"1 notizia salvata":f.length+" notizie salvate"}</b> <button id="chiudiVista">✕ Torna alla rassegna</button>`
-    :`${f.length} notizie · ${gs.length?(gs.length===1?fmtG(gs[0]):`${gs.length} giorni`):"nessun giorno disponibile"} · ${new Set(f.map(n=>n.fonte)).size} testate`)
+    :`${f.length} notizie · ${etichettaPeriodo||(gs.length?(gs.length===1?fmtG(gs[0]):`${gs.length} giorni`):"nessun giorno disponibile")} · ${new Set(f.map(n=>n.fonte)).size} testate`)
     +attivi.map(a=>`<span class="pill">${esc(a)}<button data-del="${esc(a)}" title="Togli filtro">✕</button></span>`).join("")
     +(attivi.length>1?` <button id="pulisci">Azzera filtri</button>`:"");
   document.body.classList.toggle("list",!S.griglia);
@@ -341,7 +353,7 @@ function render(){
   $("#nascLette").classList.toggle("on",S.nasc);
   if(f.length&&f.length<15&&!S.vista&&!S.q&&!S.prov.size&&!S.arg.size&&!S.fonte)
     $("#stats").innerHTML+=` <span class="pill" style="background:#f6d6a8;color:#5a3a00">⚠️ Poche notizie per questo giorno: la raccolta automatica è in ritardo, riprova tra poco</span>`;
-  if(!f.length){$("#out").innerHTML=`<div class="empty"><b>Nessuna notizia qui</b>${S.vista?"Aggiungi notizie con il pulsante ✚":"Prova ad allargare il periodo o a togliere qualche filtro."}</div>`;salvaHash();return}
+  if(!f.length){$("#out").innerHTML=`<div class="empty"><b>Nessuna notizia qui</b>${S.vista?"Aggiungi notizie con il pulsante ✚":S.ore?"In questa fascia oraria non è ancora arrivato nulla: prova con \"Oggi\".":"Prova ad allargare il periodo o a togliere qualche filtro."}</div>`;salvaHash();return}
   f.sort((a,b)=>b.data.localeCompare(a.data));
   let h="";
   if(S.ord==="cron")h=`<div class="grid">${f.map(card).join("")}</div>`;
@@ -389,6 +401,7 @@ function apriLista(l){S.vista=l;dListe.close();scrollTo({top:0});render()}
 function salvaHash(){
   const p=new URLSearchParams();
   p.set("dal",S.dal);p.set("al",S.al);
+  if(S.ore)p.set("ore",S.ore);
   if(S.q)p.set("q",S.q);if(S.fonte)p.set("fonte",S.fonte);if(S.ord!=="prov")p.set("ord",S.ord);
   if(S.prov.size)p.set("prov",[...S.prov].join(","));if(S.arg.size)p.set("arg",[...S.arg].join(","));
   history.replaceState(null,"","#"+p);
@@ -396,6 +409,7 @@ function salvaHash(){
 function leggiHash(){
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get("dal"))S.dal=p.get("dal");if(p.get("al"))S.al=p.get("al");
+  S.ore=+(p.get("ore")||0);
   S.q=p.get("q")||"";S.fonte=p.get("fonte")||"";S.ord=p.get("ord")||"prov";
   S.prov=new Set((p.get("prov")||"").split(",").filter(Boolean));S.arg=new Set((p.get("arg")||"").split(",").filter(Boolean));
   $("#q").value=S.q;$("#ord").value=S.ord;
@@ -404,7 +418,12 @@ function setRange(r){
   const oggi=giorni[0]||iso(new Date());
   $$(".rng").forEach(b=>b.classList.toggle("on",b.dataset.r===r));
   S.vista="";
-  if(r==="oggi")S.dal=S.al=oggi;
+  S.ore=r==="h1"?1:r==="h3"?3:0;
+  if(r==="h1"||r==="h3"){
+    const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-1);
+    S.dal=iso(d);S.al=oggi;
+  }
+  else if(r==="oggi")S.dal=S.al=oggi;
   else if(r==="ieri"){const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-1);S.dal=S.al=iso(d)}
   else{const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-(+r-1));S.dal=iso(d);S.al=oggi}
   aggiorna();
@@ -412,7 +431,7 @@ function setRange(r){
 function sposta(dir){
   const i=giorni.indexOf(S.al), j=i-dir;
   if(i<0||!giorni[j]){toast(dir>0?"Non ci sono giorni più recenti":"L'archivio inizia qui");return}
-  S.dal=S.al=giorni[j];S.vista="";$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna();
+  S.dal=S.al=giorni[j];S.vista="";S.ore=0;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna();
 }
 
 /* ---- eventi ---- */
@@ -420,8 +439,8 @@ $$(".rng").forEach(b=>b.onclick=()=>setRange(b.dataset.r));
 const mostraPeriodo=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.toggle("hidden")};
 $("#bPeriodo").onclick=mostraPeriodo;$("#bPeriodo2").onclick=mostraPeriodo;
 $("#etichettaData").onclick=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.remove("hidden");$("#dal").showPicker?.()};
-$("#dal").onchange=e=>{S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
-$("#al").onchange=e=>{S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#dal").onchange=e=>{S.ore=0;S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#al").onchange=e=>{S.ore=0;S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
 $("#prev").onclick=()=>sposta(-1);$("#next").onclick=()=>sposta(1);
 let tq;$("#q").oninput=e=>{clearTimeout(tq);tq=setTimeout(()=>{S.q=e.target.value;render()},200)};
 $("#fonte").onchange=e=>{S.fonte=e.target.value;render()};
