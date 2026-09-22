@@ -332,7 +332,7 @@ function render(){
   $("#provChips").innerHTML=`<button class="chip ${S.prov.size?"":"on"}" data-p="">Tutta la Sicilia</button>`+PROV.filter(p=>cp[p]).map(p=>`<button class="chip ${S.prov.has(p)?"on":""}" data-p="${p}">${p==="Sicilia"?"Regionale":p}<small>${cp[p]}</small></button>`).join("");
   $("#argChips").innerHTML=`<button class="chip ${S.arg.size?"":"on"}" data-g="">Tutti gli argomenti</button>`+Object.keys(ARG).filter(a=>ca[a]).map(a=>`<button class="chip ${S.arg.has(a)?"on":""}" data-g="${a}">${ARG[a][0]} ${a}<small>${ca[a]}</small></button>`).join("");
   const gs=giorniNelRange(), attivi=[...S.prov,...S.arg,S.fonte].filter(Boolean);
-  $("#stats").innerHTML=(S.vista?`<b>Lista «${esc(S.vista)}» · ${f.length} notizie salvate</b> <button id="chiudiVista">✕ Torna alla rassegna</button>`
+  $("#stats").innerHTML=(S.vista?`<b>Lista «${esc(S.vista)}» · ${f.length===1?"1 notizia salvata":f.length+" notizie salvate"}</b> <button id="chiudiVista">✕ Torna alla rassegna</button>`
     :`${f.length} notizie · ${gs.length?(gs.length===1?fmtG(gs[0]):`${gs.length} giorni`):"nessun giorno disponibile"} · ${new Set(f.map(n=>n.fonte)).size} testate`)
     +attivi.map(a=>`<span class="pill">${esc(a)}<button data-del="${esc(a)}" title="Togli filtro">✕</button></span>`).join("")
     +(attivi.length>1?` <button id="pulisci">Azzera filtri</button>`:"");
