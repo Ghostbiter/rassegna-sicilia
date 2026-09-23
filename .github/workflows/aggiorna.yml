@@ -1,9 +1,11 @@
 name: Aggiorna rassegna
 on:
   schedule:
-    # GitHub salta spesso le esecuzioni programmate sui progetti gratuiti:
-    # ne chiediamo una ogni 20 minuti così almeno una per ora va a buon fine.
-    - cron: "*/20 4-22 * * *"
+    # GitHub salta spesso le esecuzioni programmate sui progetti gratuiti e la
+    # mattina presto non parte quasi mai. Chiediamo a minuti "dispari" (i minuti
+    # tondi sono i più affollati) e per tutto il giorno. La sveglia affidabile
+    # arriva comunque da fuori: vedi GUIDA-SVEGLIA.md
+    - cron: "7,27,47 * * * *"
   workflow_dispatch:
 permissions:
   contents: write
