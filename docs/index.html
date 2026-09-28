@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#c8102e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍋</text></svg>">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#f7f3ec;--card:#fff;--ink:#1d1b18;--muted:#6f685e;--line:#e6ded0;--accent:#c8102e;--gold:#e0a526;--chip:#efe8db;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15130f;--card:#201d18;--ink:#eee8dc;--muted:#a39a8b;--line:#34302a;--accent:#ff6b7d;--gold:#f0bb45;--chip:#2c2822;--shadow:none}}
@@ -70,9 +70,11 @@ h2.prov span{font:500 13px Inter;color:var(--muted)}
 h2.prov::after{content:"";flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
 h3.arg{font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin:22px 0 10px;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:15px}
+.grid+.grid{margin-top:15px}
 .card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;content-visibility:auto;contain-intrinsic-size:auto 330px}
 .card.read{opacity:.5}
-.img{aspect-ratio:16/9;background:var(--chip) center/cover;display:flex;align-items:center;justify-content:center;font-size:40px}
+.img{aspect-ratio:16/9;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
+.img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .img.ph{background:linear-gradient(135deg,var(--c1),var(--c2))}
 .body{padding:12px 14px 8px;display:flex;flex-direction:column;gap:6px;flex:1}
 .src{font-size:11.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
@@ -86,6 +88,7 @@ h3.arg{font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(
 .acts button:hover{opacity:1;background:var(--chip)}
 .acts button.att{opacity:1}
 .list .grid{grid-template-columns:1fr;gap:0}
+.list .grid+.grid{margin-top:0}
 .list .card{flex-direction:row;border-radius:0;box-shadow:none;border:none;border-bottom:1px solid var(--line);background:none}
 .list .img{width:118px;min-width:118px;aspect-ratio:4/3;font-size:24px;border-radius:9px;margin:10px 0;align-self:flex-start}
 .list .d{-webkit-line-clamp:2}
@@ -280,10 +283,15 @@ const fmtG=g=>new Date(g+"T12:00").toLocaleDateString("it-IT",{weekday:"long",da
 const iso=d=>d.toLocaleDateString("sv-SE");
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2000)};
 const idOf=n=>n.id||n.link;
+const perData=(a,b)=>a.data<b.data?1:a.data>b.data?-1:0;   // più recenti prima
 const inLista=n=>Object.keys(liste).filter(l=>liste[l][idOf(n)]);
 
+/* ogni giorno ha una versione (in stato.json): i giorni che non sono cambiati
+   arrivano dalla memoria del browser invece di essere riscaricati */
+let versioni={};
 async function carica(g){
-  if(!cache[g]) cache[g]=fetch("data/"+g+".json?v="+Date.now()).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if(!cache[g]) cache[g]=fetch("data/"+g+".json"+(versioni[g]?"?v="+versioni[g]:""),versioni[g]?{}:{cache:"no-cache"})
+    .then(r=>r.ok?r.json():[]).catch(()=>[]);
   return cache[g];
 }
 const giorniNelRange=()=>giorni.filter(g=>g>=S.dal&&g<=S.al);
@@ -301,6 +309,8 @@ async function aggiorna(){
 }
 
 function base(){ return S.vista ? Object.values(liste[S.vista]||{}) : news }
+const testi=new WeakMap();   // testo in minuscolo per la ricerca, calcolato una volta per notizia
+const testo=n=>{let t=testi.get(n);if(t==null)testi.set(n,t=(n.titolo+" "+n.desc+" "+n.fonte).toLowerCase());return t};
 function filtrate(){
   const parts=S.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const limite=S.ore?Date.now()-S.ore*3600000:0;
@@ -310,16 +320,23 @@ function filtrate(){
     if(S.arg.size&&!S.arg.has(n.argomento))return false;
     if(S.fonte&&n.fonte!==S.fonte)return false;
     if(S.nasc&&lette.has(idOf(n)))return false;
-    if(parts.length){const t=(n.titolo+" "+n.desc+" "+n.fonte).toLowerCase();if(!parts.every(p=>t.includes(p)))return false}
+    if(parts.length){const t=testo(n);if(!parts.every(p=>t.includes(p)))return false}
     return true;
   });
 }
-function hl(s){s=esc(s);if(!S.q.trim())return s;for(const p of S.q.trim().split(/\s+/)){if(p.length<2)continue;s=s.replace(new RegExp("("+p.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>")}return s}
+let reQ=null, reQper="";   // evidenziazione: un'unica espressione per ricerca, non una per scheda
+function hl(s){
+  s=esc(s);
+  if(reQper!==S.q){reQper=S.q;const p=S.q.trim().split(/\s+/).filter(p=>p.length>1).sort((a,b)=>b.length-a.length);
+    reQ=p.length?new RegExp("("+p.map(x=>esc(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi"):null}
+  return reQ?s.replace(reQ,"<mark>$1</mark>"):s;
+}
 
 function card(n){
   const [ico,c1,c2]=ARG[n.argomento]||ARG["Altre notizie"];
   const ora=new Date(n.data).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  const img=n.img?`<div class="img" style="background-image:url('${esc(n.img)}')"></div>`:`<div class="img ph" style="--c1:${c1};--c2:${c2}">${ico}</div>`;
+  // loading=lazy: la foto si scarica solo quando la scheda sta per comparire sullo schermo
+  const img=n.img?`<div class="img"><img src="${esc(n.img)}" alt="" loading="lazy" decoding="async" onerror="rotta(this)"></div>`:`<div class="img ph" style="--c1:${c1};--c2:${c2}">${ico}</div>`;
   const also=n.anche?.length?`<div class="also">Anche su: ${n.anche.map(a=>`<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.fonte)}</a>`).join(", ")}</div>`:"";
   const salvata=inLista(n).length;
   return `<article class="card ${lette.has(idOf(n))?"read":""}" data-id="${esc(idOf(n))}">${img}<div class="body">
@@ -334,7 +351,35 @@ function card(n){
     <button data-a="read" title="Segna come letta o da leggere">✓</button>
   </div></div></article>`;
 }
+function rotta(i){const d=i.parentElement;d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"}
 const gruppi=(l,k,ord)=>{const m={};l.forEach(n=>(m[n[k]]??=[]).push(n));return (ord||Object.keys(m)).filter(x=>m[x]).map(x=>[x,m[x]])};
+
+/* Le schede si disegnano a blocchi, solo quando stanno per entrare nello schermo:
+   anche con migliaia di notizie (7 o 30 giorni) la pagina resta leggera.
+   48 schede per blocco: si divide per 1, 2, 3 e 4 colonne, quindi le righe restano piene. */
+const BLOCCO=48;
+let blocchi=[];
+const osserva=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)riempi(e.target)}),{rootMargin:"1500px 0px"});
+function stima(n){   // altezza provvisoria del blocco, finché non è disegnato
+  const w=Math.min(innerWidth,1240)-32;
+  if(!S.griglia)return n*120;
+  const col=Math.max(1,Math.floor((w+15)/280)), cw=(w-15*(col-1))/col;
+  return Math.ceil(n/col)*(cw*9/16+200)-15;
+}
+function griglia(l){
+  let h="";
+  for(let i=0;i<l.length;i+=BLOCCO){
+    const pezzo=l.slice(i,i+BLOCCO);
+    h+=`<div class="grid" data-b="${blocchi.push(pezzo)-1}" style="min-height:${Math.round(stima(pezzo.length))}px"></div>`;
+  }
+  return h;
+}
+function riempi(g){
+  const l=g.isConnected&&blocchi[g.dataset.b];if(!l)return;
+  blocchi[g.dataset.b]=null;osserva.unobserve(g);
+  g.innerHTML=l.map(card).join("");g.removeAttribute("data-b");g.style.minHeight="";
+}
+addEventListener("beforeprint",()=>$$("#out .grid[data-b]").forEach(riempi));   // in stampa servono tutte
 
 function render(){
   const f=filtrate();
@@ -354,21 +399,27 @@ function render(){
   if(f.length&&f.length<15&&!S.vista&&!S.q&&!S.prov.size&&!S.arg.size&&!S.fonte)
     $("#stats").innerHTML+=` <span class="pill" style="background:#f6d6a8;color:#5a3a00">⚠️ Poche notizie per questo giorno: la raccolta automatica è in ritardo, riprova tra poco</span>`;
   if(!f.length){$("#out").innerHTML=`<div class="empty"><b>Nessuna notizia qui</b>${S.vista?"Aggiungi notizie con il pulsante ✚":S.ore?"In questa fascia oraria non è ancora arrivato nulla: prova con \"Oggi\".":"Prova ad allargare il periodo o a togliere qualche filtro."}</div>`;salvaHash();return}
-  f.sort((a,b)=>b.data.localeCompare(a.data));
+  f.sort(perData);
   let h="";
-  if(S.ord==="cron")h=`<div class="grid">${f.map(card).join("")}</div>`;
-  else if(S.ord==="arg")for(const [a,l] of gruppi(f,"argomento",Object.keys(ARG)))h+=`<h2 class="prov">${ARG[a][0]} ${a} <span>${l.length}</span></h2><div>${`<div class="grid">${l.map(card).join("")}</div>`}</div>`;
+  blocchi=[];osserva.disconnect();
+  if(S.ord==="cron")h=griglia(f);
+  else if(S.ord==="arg")for(const [a,l] of gruppi(f,"argomento",Object.keys(ARG)))h+=`<h2 class="prov">${ARG[a][0]} ${a} <span>${l.length}</span></h2><div>${griglia(l)}</div>`;
   else for(const [p,l] of gruppi(f,"provincia",PROV)){
     h+=`<section><h2 class="prov" title="Tocca per chiudere la sezione">${p==="Sicilia"?"Sicilia · regionale":"Provincia di "+p} <span>${l.length}</span></h2><div>`;
-    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG)))h+=`<h3 class="arg">${ARG[a][0]} ${a} · ${la.length}</h3><div class="grid">${la.map(card).join("")}</div>`;
+    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG)))h+=`<h3 class="arg">${ARG[a][0]} ${a} · ${la.length}</h3>${griglia(la)}`;
     h+="</div></section>";
   }
   $("#out").innerHTML=h;
+  // subito i blocchi già sullo schermo (niente pagina vuota), gli altri quando ci si arriva
+  for(const g of $$("#out .grid[data-b]")){
+    const r=g.getBoundingClientRect();
+    if(r.bottom>-1500&&r.top<innerHeight+1500)riempi(g);else osserva.observe(g);
+  }
   salvaHash();
 }
 
 function testoRassegna(lista){
-  const f=(lista?Object.values(liste[lista]):filtrate()).sort((a,b)=>b.data.localeCompare(a.data)), gs=giorniNelRange();
+  const f=(lista?Object.values(liste[lista]):filtrate()).sort(perData), gs=giorniNelRange();
   let t=`📰 *RASSEGNA SICILIA* — ${lista?"lista "+lista:(gs.length===1?fmtG(gs[0]):`${S.dal} → ${S.al}`)}\n`;
   for(const [p,l] of gruppi(f,"provincia",PROV)){
     t+=`\n🍋 *${p.toUpperCase()}*\n`;
@@ -500,9 +551,8 @@ $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t
 $("#bAggiorna").onclick=async()=>{
   const b=$("#bAggiorna"), prima=news.length, t0=Date.now();
   b.disabled=true; b.classList.add("gira"); b.textContent="↻ Controllo…";
-  giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni);
-  cache={};                                   // svuota la copia in memoria
-  await statoAggiornamento();
+  [giorni]=await Promise.all([fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni),statoAggiornamento()]);
+  cache={};                                   // svuota la copia in memoria (i giorni non cambiati tornano dalla cache del browser)
   await aggiorna();
   const nuove=news.length-prima, min=ritardoMinuti();
   await new Promise(r=>setTimeout(r,Math.max(0,600-(Date.now()-t0))));   // il riscontro si deve vedere
@@ -538,7 +588,6 @@ document.addEventListener("keydown",e=>{
 });
 addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none");
 $("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
-new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true,subtree:true});
 
 const tempoFa=m=>m<1?"adesso":m===1?"1 minuto fa":m<60?m+" minuti fa":
   m<120?"1 ora fa":m<1440?Math.round(m/60)+" ore fa":m<2880?"ieri":Math.round(m/1440)+" giorni fa";
@@ -547,6 +596,7 @@ const ritardoMinuti=()=>ultimoAgg?Math.round((Date.now()-ultimoAgg)/60000):0;
 async function statoAggiornamento(){
   try{
     const s=await fetch("data/stato.json?v="+Date.now()).then(r=>r.json());
+    versioni=s.versioni||{};
     ultimoAgg=new Date(s.aggiornato);
     const min=ritardoMinuti();
     const q=min<90?"":min<240?" ⚠️":" ⚠️";
@@ -558,8 +608,7 @@ async function statoAggiornamento(){
 }
 (async()=>{
   etichettaListe();
-  statoAggiornamento();
-  giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]);
+  [giorni]=await Promise.all([fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]),statoAggiornamento()]);
   if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
   if(location.hash.length>1){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");
 })();

@@ -15,6 +15,8 @@ concurrency:
 jobs:
   aggiorna:
     runs-on: ubuntu-latest
+    # un giro normale dura un minuto: se qualcosa si pianta non blocca le raccolte successive
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,4 +26,11 @@ jobs:
           git config user.name "rassegna-bot"
           git config user.email "bot@users.noreply.github.com"
           git add docs/data
-          git diff --cached --quiet || (git commit -m "Rassegna $(date +%F\ %H:%M)" && git push)
+          git diff --cached --quiet && exit 0
+          git commit -m "Rassegna $(date +%F\ %H:%M)"
+          # se nel frattempo ha pubblicato il Mac: mi riallineo (tenendo i dati appena raccolti) e riprovo
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase -X theirs -q origin main || exit 1
+          done
+          exit 1

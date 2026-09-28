@@ -5,6 +5,7 @@ e salva docs/data/AAAA-MM-GG.json per il sito. Solo libreria standard."""
 import time, threading, hashlib, urllib.request, urllib.parse, xml.etree.ElementTree as ET, html, re, json, os, sys
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from zoneinfo import ZoneInfo
 
@@ -130,9 +131,17 @@ def scarica(nome_url):
                     "desc":desc[:220],"img":immagine(it),"_hint":hint})
     print("ok ", nome, len(out)); return out
 
-def trova(testo, diz, default):
+def regole(diz):
+    """Espressioni pronte una volta sola: per ogni voce un filtro unico (c'è almeno una parola?)
+    e le singole parole da contare."""
+    return {k: (re.compile(r"\b(?:" + "|".join(re.escape(w.lower()) for w in v) + ")"),
+                [re.compile(r"\b" + re.escape(w.lower())) for w in v]) for k, v in diz.items()}
+R_PROVINCE, R_ARGOMENTI = regole(PROVINCE), regole(ARGOMENTI)
+
+def trova(testo, reg, default):
     t = " " + testo.lower() + " "
-    punti = {k: sum(len(re.findall(r"\b" + re.escape(w.lower()), t)) for w in v) for k, v in diz.items()}
+    punti = {k: sum(len(p.findall(t)) for p in parole_k) if filtro.search(t) else 0
+             for k, (filtro, parole_k) in reg.items()}
     k = max(punti, key=punti.get)
     return k if punti[k] else default
 
@@ -144,41 +153,53 @@ def ident(titolo):
 def classifica(n):
     n["id"] = ident(n["titolo"])
     testo = n["titolo"] + " " + n["desc"]
-    n["provincia"] = trova(testo, PROVINCE, n.pop("_hint", None) or "Sicilia")
-    n["argomento"] = trova(testo, ARGOMENTI, "Altre notizie")
+    n["provincia"] = trova(testo, R_PROVINCE, n.pop("_hint", None) or "Sicilia")
+    n["argomento"] = trova(testo, R_ARGOMENTI, "Altre notizie")
     n["fonte"] = nome_testata(n["fonte"])
     n["peso"] = priorita(n["fonte"])
     return n
 
 def deduplica(notizie):
+    """Titoli simili (metà delle parole in comune) = stessa notizia: resta la testata maggiore.
+    L'indice parola -> notizie tenute evita di confrontare ogni titolo con tutti gli altri."""
     notizie.sort(key=lambda n: -n["peso"])
-    tenute = []
+    tenute, indice = [], {}
     for n in notizie:
         p = parole(n["titolo"])
-        dup = None
-        for t in tenute:
-            q = t["_p"]
-            if p and q and len(p & q) / len(p | q) >= 0.5: dup = t; break
-        if dup:
+        comuni = Counter(i for w in p for i in indice.get(w, ()))
+        dup = min((i for i, c in comuni.items() if c / (len(p) + len(tenute[i]["_p"]) - c) >= 0.5), default=None)
+        if dup is not None:
+            dup = tenute[dup]
             if not dup.get("img") and n.get("img"): dup["img"] = n["img"]
             altre = dup.setdefault("anche", [])
             if n["fonte"] != dup["fonte"] and all(a["fonte"] != n["fonte"] for a in altre) and len(altre) < 5:
                 altre.append({"fonte": n["fonte"], "link": n["link"]})
         else:
-            n["_p"] = p; tenute.append(n)
+            n["_p"] = p
+            for w in p: indice.setdefault(w, []).append(len(tenute))
+            tenute.append(n)
     for t in tenute: t.pop("_p", None); t.pop("_hint", None)
     return tenute
 
 UA = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 
-def apri(url, limite=250000, timeout=15):
-    return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout).read(limite).decode("utf8","ignore")
+def apri(url, limite=250000, timeout=15, fino=()):
+    """Scarica una pagina. Con `fino` smette appena ha letto tutti i pezzi indicati
+    (più un margine), invece di scaricarla intera."""
+    buf = bytearray()
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
+        while len(buf) < limite:
+            pezzo = r.read(min(65536, limite - len(buf)))
+            if not pezzo: break
+            buf += pezzo
+            if fino and all(buf.find(m, 0, len(buf) - 4096) >= 0 for m in fino): break
+    return buf.decode("utf8", "ignore")
 
 def risolvi_google(link):
     """Da un link news.google.com risale all'indirizzo reale dell'articolo."""
     try:
         art = link.split("/articles/")[1].split("?")[0]
-        h = apri(link, 3000000, 20)
+        h = apri(link, 3000000, 20, fino=(b"data-n-a-sg=", b"data-n-a-ts="))
         sig = re.search(r'data-n-a-sg="([^"]+)"', h).group(1)
         ts = re.search(r'data-n-a-ts="([^"]+)"', h).group(1)
         req = ["Fbv4je", json.dumps(["garturlreq",[["X","X",["X"],None,None,1,1,"US:en",None,1,None,None,None,None,None,0,1],
@@ -195,7 +216,7 @@ def risolvi_google(link):
 def og(url):
     """Immagine di copertina (og:image) dalla pagina dell'articolo."""
     try:
-        h = apri(url, 300000)
+        h = apri(url, 300000, fino=(b"</head>",))   # og:image sta sempre nella <head>
         for pat in (r'<meta[^>]+property=["\']og:image(?::url)?["\'][^>]*content=["\']([^"\']+)',
                     r'<meta[^>]+name=["\']twitter:image["\'][^>]*content=["\']([^"\']+)',
                     r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*property=["\']og:image'):
@@ -209,9 +230,13 @@ def og(url):
     return None
 
 # Google limita le richieste (errore 429): al massimo TETTO risoluzioni per esecuzione,
-# con una piccola pausa. Il bot gira ogni 2 ore, quindi l'archivio si completa da solo.
+# poche alla volta e con una piccola pausa. Il bot gira spesso, quindi l'archivio si
+# completa da solo. Un link che fallisce TENTATIVI volte resta quello di Google (funziona
+# lo stesso) e non si riprova più, invece di ripeterlo a ogni giro.
 TETTO = int(os.environ.get("TETTO_RISOLUZIONI", 220))
+TENTATIVI = 4
 _lock = threading.Lock()
+_google = threading.Semaphore(5)
 _contatore = [0]
 def _permesso():
     with _lock:
@@ -224,10 +249,15 @@ def arricchisci(n):
     if n.get("fatto"): return n
     if "news.google.com" in n["link"]:
         if not _permesso(): return n          # tetto raggiunto: al prossimo giro
-        time.sleep(0.6)
-        vero = risolvi_google(n["link"])
-        if vero: n["link"] = vero
-        else: return n          # riproveremo al prossimo giro
+        with _google:
+            time.sleep(0.6)
+            vero = risolvi_google(n["link"])
+        if vero:
+            n["link"] = vero; n.pop("tent", None)
+        else:
+            n["tent"] = n.get("tent", 0) + 1
+            if n["tent"] < TENTATIVI: return n    # riproveremo al prossimo giro
+            n.pop("tent"); n["fatto"] = 1; return n
     if not n.get("img"): n["img"] = og(n["link"])
     n["fatto"] = 1
     return n
@@ -235,22 +265,37 @@ def arricchisci(n):
 def main():
     with ThreadPoolExecutor(16) as ex:
         nuove = [n for lst in ex.map(scarica, FEED.items()) for n in lst]
-    limite = (datetime.now(ROMA) - timedelta(days=2)).date()
+    limite = (datetime.now(ROMA) - timedelta(days=2)).date().isoformat()
     per_giorno = {}
     for n in nuove:
         g = n["data"][:10]
-        if g >= limite.isoformat(): per_giorno.setdefault(g, []).append(classifica(n))
+        if g >= limite: per_giorno.setdefault(g, []).append(n)
     os.makedirs(DIR, exist_ok=True)
-    conteggi = {}
+    giornate = {}
     for g, lst in per_giorno.items():
         f = os.path.join(DIR, g + ".json")
         vecchie = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else []
-        tutte = deduplica(vecchie + lst)
+        # I feed ripropongono per ore le stesse notizie: quelle già in archivio (stesso titolo,
+        # stessa testata) non si riclassificano e non si rideduplicano.
+        note = {(v["id"], v["fonte"]): v for v in vecchie}
+        fresche = []
+        for n in lst:
+            v = note.get((ident(n["titolo"]), nome_testata(n["fonte"])))
+            if v is None: fresche.append(classifica(n))
+            elif not v.get("img") and n.get("img"): v["img"] = n["img"]
+        giornate[g] = deduplica(vecchie + fresche)
+    # una sola coda per tutti i giorni, dalle più recenti (sono loro ad avere la precedenza sul
+    # tetto di Google): le pagine dei giornali in parallelo, Google poche alla volta
+    da_fare = sorted((n for tutte in giornate.values() for n in tutte if not n.get("fatto")),
+                     key=lambda n: n["data"], reverse=True)
+    with ThreadPoolExecutor(12) as ex: list(ex.map(arricchisci, da_fare))
+    print(f"  link Google risolti in questa esecuzione: {_contatore[0]}/{TETTO}")
+    conteggi, scritti = {}, {}
+    for g, tutte in giornate.items():
         tutte.sort(key=lambda n: n["data"], reverse=True)
-        with ThreadPoolExecutor(5) as ex: tutte = list(ex.map(arricchisci, tutte))
-        print(f"  link risolti in questa esecuzione: {_contatore[0]}/{TETTO}")
-        tutte.sort(key=lambda n: n["data"], reverse=True)
-        json.dump(tutte, open(f, "w", encoding="utf-8"), ensure_ascii=False, separators=(",",":"))
+        testo = json.dumps(tutte, ensure_ascii=False, separators=(",",":")).encode("utf-8")
+        with open(os.path.join(DIR, g + ".json"), "wb") as fh: fh.write(testo)
+        scritti[g] = hashlib.sha1(testo).hexdigest()[:10]
         conteggi[g] = len(tutte)
         print(f"{g}: {len(tutte)} notizie")
     giorni = sorted((x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)), reverse=True)
@@ -261,15 +306,23 @@ def main():
     adesso = datetime.now(ROMA)
     f_stato = os.path.join(DIR, "stato.json")
     try:
-        storico = json.load(open(f_stato)).get("storico", [])
+        prima = json.load(open(f_stato))
     except Exception:
-        storico = []
+        prima = {}
+    storico = prima.get("storico", [])
     storico.insert(0, {"ora": adesso.isoformat(timespec="minutes"), "origine": origine,
                        "notizie": conteggi.get(adesso.date().isoformat(), 0)})
+    # versione di ogni giorno (impronta del file): il sito riscarica solo i giorni cambiati
+    versioni = prima.get("versioni", {})
+    versioni.update(scritti)
+    for g in giorni:
+        if g not in versioni:
+            versioni[g] = hashlib.sha1(open(os.path.join(DIR, g + ".json"), "rb").read()).hexdigest()[:10]
     json.dump({"aggiornato": adesso.isoformat(timespec="minutes"),
                "origine": origine,
                "notizie_oggi": conteggi.get(adesso.date().isoformat(), 0),
-               "storico": storico[:12]},
+               "storico": storico[:12],
+               "versioni": {g: versioni[g] for g in giorni}},
               open(f_stato, "w"))
     print(f"battito: raccolta delle {adesso:%H:%M} da {origine}")
 
