@@ -273,7 +273,7 @@ def mostra(k):
     if k in MOSTRA: return MOSTRA[k]
     forme = _forme.get(k)
     if not forme or any(f.islower() for f in forme): return k
-    return k.capitalize() if k.capitalize() in forme else forme.most_common(1)[0][0]   # "Cina", non "China"
+    return k.capitalize() if k.capitalize() in forme else piu_comuni(forme, 1)[0][0]   # "Cina", non "China"
 
 # --- raccolta -------------------------------------------------------------------------
 UA = {"User-Agent": "Mozilla/5.0 (RassegnaSiciliaBot; scenario internazionale)"}
@@ -339,6 +339,17 @@ def raggruppa(articoli):
         else:
             gruppi[g].append(a)
     return gruppi
+
+def scrivi(nome, dati):
+    """Scrittura atomica: prima un file provvisorio, poi lo scambio. Mai un file scritto a metà."""
+    f = os.path.join(DIR, nome)
+    with open(f + ".tmp", "w", encoding="utf-8") as fh:
+        json.dump(dati, fh, ensure_ascii=False, separators=(",", ":"))
+    os.replace(f + ".tmp", f)
+
+def piu_comuni(conta, n):
+    """Come Counter.most_common, ma a parità di conteggio in ordine alfabetico: stesso risultato a ogni esecuzione."""
+    return sorted(conta.items(), key=lambda x: (-x[1], x[0]))[:n]
 
 def quote(pesi, totale):
     return {k: round(100 * v / totale, 1) if totale else 0 for k, v in pesi.items()}
@@ -467,27 +478,27 @@ def main():
         "edizioni_prima": len(prima),
         "temi": {k: qt.get(k, 0) for k in TEMI},
         "storie": tenute,
-        "parole": {"oggi": [fmt(k) for k, _ in df.most_common(30)],
+        "parole": {"oggi": [fmt(k) for k, _ in piu_comuni(df, 30)],
                    "ascesa": [fmt(k) for _, k in sorted(ascesa, reverse=True)[:15]],
                    "stabili": [fmt(k) for _, k in sorted(stabili, reverse=True)[:15]],
                    "calo": [fmt(k) for _, k in sorted(calo, reverse=True)[:15]]},
         "fonti": [[nome_feed.get(f[0], f[0]), f[3], per_feed[i]] for i, f in enumerate(FEED)],
-        "conteggi": dict(df.most_common(400)),
+        "conteggi": dict(piu_comuni(df, 400)),
     }
-    with open(f_oggi, "w", encoding="utf-8") as fh:
-        json.dump(edizione, fh, ensure_ascii=False, separators=(",", ":"))
-
-    # indice delle edizioni e serie per le tendenze
-    edizioni = sorted((x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)), reverse=True)
-    json.dump(edizioni, open(os.path.join(DIR, "index.json"), "w"))
+    # indice delle edizioni e serie per le tendenze. Il file del giorno si scrive per ultimo: è lui a
+    # dire "edizione fatta", quindi se qualcosa si interrompe prima la raccolta successiva la rifà.
+    edizioni = sorted({x[:-5] for x in os.listdir(DIR) if re.match(r"\d{4}-\d\d-\d\d\.json$", x)} | {oggi},
+                      reverse=True)
     serie = {"giorni": [], "articoli": [], "aree": {k: [] for k in AREE}, "temi": {k: [] for k in TEMI}}
     for g in reversed(edizioni[:STORICO]):
-        try: e = json.load(open(os.path.join(DIR, g + ".json"), encoding="utf-8"))
+        try: e = edizione if g == oggi else json.load(open(os.path.join(DIR, g + ".json"), encoding="utf-8"))
         except Exception: continue
         serie["giorni"].append(g); serie["articoli"].append(e["articoli"])
         for k in AREE: serie["aree"][k].append(e["aree"].get(k, 0))
         for k in TEMI: serie["temi"][k].append(e["temi"].get(k, 0))
-    json.dump(serie, open(os.path.join(DIR, "serie.json"), "w"), ensure_ascii=False, separators=(",", ":"))
+    scrivi("index.json", edizioni)
+    scrivi("serie.json", serie)
+    scrivi(oggi + ".json", edizione)
     print(f"mondo: edizione del {oggi} pronta · {N} articoli, {edizione['testate']} testate, "
           f"{len(tenute)} storie · area principale: {max(q, key=q.get) if q else '-'}")
 

@@ -725,7 +725,7 @@ async function statoAggiornamento(){
 }
 /* ================= Internazionale: una edizione al giorno, per l'analisi di fase ================= */
 const vm=()=>document.body.classList.contains("vmondo");
-let M={indice:null,serie:null,g:"",e:null}, tips=[];
+let M={indice:null,serie:null,g:"",e:null,voluto:""}, tips=[];   // voluto: l'ultima edizione chiesta
 const num=v=>(+v).toLocaleString("it-IT",{maximumFractionDigits:1});
 const pct=v=>v==null?"—":(+v).toLocaleString("it-IT",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
 const fmtLungo=g=>{const s=fmtG(g);return s[0].toUpperCase()+s.slice(1)};
@@ -759,12 +759,18 @@ async function mCarica(g){
     return;
   }
   if(!M.indice.includes(g))g=M.indice[0];
-  if(M.g!==g||!M.e){$("#mCorpo").style.opacity=.5;M.e=await jm(g+".json");M.g=g;$("#mCorpo").style.opacity=""}
+  M.voluto=g;
+  if(M.g!==g||!M.e){
+    $("#mCorpo").style.opacity=.5;
+    const e=await jm(g+".json");
+    if(M.voluto!==g)return;          // nel frattempo è stata chiesta un'altra edizione: questa si scarta
+    M.e=e;M.g=g;$("#mCorpo").style.opacity="";
+  }
   if(vm())history.replaceState(history.state,"","#mondo"+(g===M.indice[0]?"":"="+g));
   mRender();
 }
 function mSposta(d){
-  const i=M.indice?M.indice.indexOf(M.g):-1;if(i<0)return;
+  const i=M.indice?M.indice.indexOf(M.voluto||M.g):-1;if(i<0)return;
   if(!M.indice[i-d]){toast(d>0?"È l'edizione più recente":"L'archivio inizia qui");return}
   mCarica(M.indice[i-d]);
 }
