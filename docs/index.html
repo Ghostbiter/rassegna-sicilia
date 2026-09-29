@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#c8102e">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍋</text></svg>">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#f7f3ec;--card:#fff;--ink:#1d1b18;--muted:#6f685e;--line:#e6ded0;--accent:#c8102e;--gold:#e0a526;--chip:#efe8db;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15130f;--card:#201d18;--ink:#eee8dc;--muted:#a39a8b;--line:#34302a;--accent:#ff6b7d;--gold:#f0bb45;--chip:#2c2822;--shadow:none}}
@@ -70,9 +70,11 @@ h2.prov span{font:500 13px Inter;color:var(--muted)}
 h2.prov::after{content:"";flex:1;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
 h3.arg{font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin:22px 0 10px;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:15px}
+.grid+.grid{margin-top:15px}
 .card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;content-visibility:auto;contain-intrinsic-size:auto 330px}
 .card.read{opacity:.5}
-.img{aspect-ratio:16/9;background:var(--chip) center/cover;display:flex;align-items:center;justify-content:center;font-size:40px}
+.img{aspect-ratio:16/9;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
+.img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .img.ph{background:linear-gradient(135deg,var(--c1),var(--c2))}
 .body{padding:12px 14px 8px;display:flex;flex-direction:column;gap:6px;flex:1}
 .src{font-size:11.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
@@ -86,6 +88,7 @@ h3.arg{font-size:12.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(
 .acts button:hover{opacity:1;background:var(--chip)}
 .acts button.att{opacity:1}
 .list .grid{grid-template-columns:1fr;gap:0}
+.list .grid+.grid{margin-top:0}
 .list .card{flex-direction:row;border-radius:0;box-shadow:none;border:none;border-bottom:1px solid var(--line);background:none}
 .list .img{width:118px;min-width:118px;aspect-ratio:4/3;font-size:24px;border-radius:9px;margin:10px 0;align-self:flex-start}
 .list .d{-webkit-line-clamp:2}
@@ -138,14 +141,111 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   .guida{padding:10px 0}
 }
 @media (max-width:640px){.list .img{width:88px;min-width:88px}h2.prov{font-size:23px}.datenav b{min-width:110px}.fonti{columns:1}}
+/* ---- Internazionale: un'altra sezione, un'altra impaginazione (niente foto, una nota di scenario) ---- */
+#mondo,.solo-m{display:none}
+body.vmondo #mondo{display:block}
+body.vmondo .solo-m{display:inline}
+body.vmondo .solo-s,body.vmondo .guida,body.vmondo .giornali,body.vmondo .bar,body.vmondo main,body.vmondo #bAggiorna,body.vmondo #bListe,body.vmondo #bGiornali{display:none}
+body.vmondo header{background:linear-gradient(135deg,#16284a,#2a5fa8)}
+.mondo{--s1:#2a78d6;--s2:#eb6834;--spento:#898781;padding:22px 0 10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mondo{--s1:#3987e5;--s2:#d95926}}
+:root[data-theme=dark] .mondo{--s1:#3987e5;--s2:#d95926}
+.m-top{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;border-bottom:3px double var(--line);padding-bottom:14px}
+.m-kicker{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:700}
+.m-titolo{font:900 clamp(26px,4vw,38px)/1.1 "Playfair Display",serif;margin:4px 0 6px}
+.m-meta{font-size:13px;color:var(--muted)}
+.m-nav{display:flex;gap:6px;flex-wrap:wrap}
+.m-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0}
+.m-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.m-tile small{display:block;font-size:12.5px;color:var(--muted)}
+.m-tile b{display:block;font-size:21px;font-weight:600;line-height:1.25;margin-top:3px}
+.m-tile span{font-size:12.5px;color:var(--muted)}
+.m-griglia{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px;align-items:start}
+.m-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.m-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.m-card h3{font:700 19px "Playfair Display",serif;margin:0 0 2px}
+.m-card .m-sot{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.m-nota{font-size:12px;color:var(--muted);margin:10px 0 0}
+.m-riga{display:grid;grid-template-columns:150px minmax(0,1fr) 62px 78px;align-items:center;gap:10px;padding:4px 0;border-radius:6px}
+.m-riga:hover,.m-riga:focus{background:var(--chip);outline:none}
+.m-riga>span:first-child{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-barra{display:flex;align-items:center;gap:6px;min-width:0}
+.m-barra i{display:block;height:10px;background:var(--s1);border-radius:0 4px 4px 0;min-width:2px}
+.m-barra em{font-style:normal;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.m-delta{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.m-spark{width:78px;height:24px;display:block}
+.m-spark polyline{fill:none;stroke:var(--spento);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.m-spark circle{fill:var(--s1);stroke:var(--card);stroke-width:2}
+.m-legenda{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin:-4px 0 8px}
+.m-legenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.m-db{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;align-items:center;gap:10px;padding:3px 0;border-radius:6px}
+.m-db:hover,.m-db:focus{background:var(--chip);outline:none}
+.m-db>span:first-child{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-db svg{width:100%;height:20px;display:block;overflow:visible}
+.m-db line{stroke:var(--line);stroke-width:2}
+.m-db circle{stroke:var(--card);stroke-width:2}
+.m-db .m-delta{text-align:left}
+.m-colonne{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.m-colonne h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted)}
+.m-storie{list-style:none;margin:0;padding:0;counter-reset:st}
+.m-storie>li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.m-storie>li:first-child{border-top:none}
+.m-storie>li::before{counter-increment:st;content:counter(st);font:700 17px "Playfair Display",serif;color:var(--muted);line-height:1.2}
+.m-storie a{text-decoration:none;font-weight:600;line-height:1.35}
+.m-storie a:hover{text-decoration:underline}
+.m-sm{font-size:12px;color:var(--muted);margin-top:3px}
+.m-storie details{margin-top:4px;font-size:12.5px}
+.m-storie summary{cursor:pointer;color:var(--muted)}
+.m-storie details ul{margin:6px 0 0;padding-left:16px}
+.m-storie details li{margin:3px 0}
+.m-storie details a{font-weight:400}
+.m-aree{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px 22px}
+.m-area h4{font:700 15px "Playfair Display",serif;margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.m-area h4 span{font:500 12px Inter,sans-serif;color:var(--muted)}
+.m-area ul{list-style:none;margin:0;padding:0}
+.m-area li{font-size:13.5px;line-height:1.35;padding:5px 0}
+.m-area li a{text-decoration:none}.m-area li a:hover{text-decoration:underline}
+.m-parole h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted)}
+.m-parole h4:first-of-type{margin-top:0}
+.m-chips{display:flex;flex-wrap:wrap;gap:6px}
+.m-chips span{background:var(--chip);border-radius:999px;padding:3px 10px;font-size:13px;cursor:default}
+.m-chips small{color:var(--muted);margin-left:4px;font-size:11.5px}
+.m-fonti{font-size:12.5px;color:var(--muted);columns:2;column-gap:18px}
+.m-fonti div{display:flex;justify-content:space-between;gap:8px;break-inside:avoid;padding:1px 0}
+.m-fonti .ko{color:var(--accent)}
+.m-tab summary{cursor:pointer;font-size:12.5px;color:var(--muted);margin-top:10px}
+.m-tab .scorri{overflow-x:auto}
+.m-tab table{border-collapse:collapse;font-size:12px;margin-top:8px;font-variant-numeric:tabular-nums}
+.m-tab th,.m-tab td{padding:3px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.m-tab th:first-child,.m-tab td:first-child{text-align:left}
+.m-vuoto{text-align:center;padding:60px 16px;color:var(--muted)}
+.m-vuoto b{display:block;font:700 22px "Playfair Display",serif;color:var(--ink);margin-bottom:8px}
+#mTip{position:fixed;z-index:99;pointer-events:none;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.16);display:none;max-width:260px}
+#mTip div{display:flex;gap:8px;justify-content:space-between}
+#mTip b{font-weight:700}
+#mTip span{color:var(--muted)}
+@media (max-width:900px){
+  .m-griglia{display:flex;flex-direction:column}
+  .m-col{display:contents}
+  .m-card{width:100%}
+  #cAgenda{order:1}#cParole{order:2}#cAperture{order:3}#cTemi{order:4}#cConfronto{order:5}#cAree{order:6}#cFonti{order:7}
+}
+@media (max-width:640px){
+  .m-colonne{grid-template-columns:1fr}
+  .m-riga{grid-template-columns:104px minmax(0,1fr) 54px}
+  .m-riga .m-spark{display:none}
+  .m-db{grid-template-columns:104px minmax(0,1fr) 70px}
+  .m-fonti{columns:1}
+}
 @media print{.bar,#top,.acts,.hbtns,header .sub,footer{display:none}header{background:none;color:#000;padding:0;border-bottom:2px solid #000}h1{color:#000}.card{break-inside:avoid;box-shadow:none;border:none;border-bottom:1px solid #ccc}.img{display:none}.grid{grid-template-columns:1fr 1fr;gap:6px}}
 </style>
 </head>
 <body>
 <header><div class="wrap htop">
-  <div><h1>Rassegna Sicilia</h1><div class="sub">Le notizie di tutta l'isola, provincia per provincia · <span id="statoAgg">—</span></div></div>
+  <div><h1>Rassegna Sicilia</h1><div class="sub"><span class="solo-s">Le notizie di tutta l'isola, provincia per provincia · <span id="statoAgg">—</span></span><span class="solo-m">Scenario internazionale per l'analisi di fase · una edizione al giorno</span></div></div>
   <div class="hbtns">
     <button id="bAggiorna" title="Ricarica le notizie più recenti">↻ Aggiorna</button>
+    <button id="bMondo" title="Scenario internazionale: una edizione al giorno"><span class="solo-s">🌍 Internazionale</span><span class="solo-m">🍋 Torna alla Sicilia</span></button>
     <button id="bListe" title="Le tue liste e i preferiti">★ <span id="nListe">Le mie liste</span></button>
     <button id="bGiornali" title="Giornali e prime pagine">🗞 Giornali</button>
     <button id="bAiuto" title="Guida e fonti">? Guida</button>
@@ -220,7 +320,23 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   <div class="stats" id="stats"></div>
   <div id="out"></div>
 </main>
-<footer>Titoli, foto e link appartengono alle rispettive testate · rassegna generata automaticamente da feed pubblici e Google News · aggiornata ogni ora</footer>
+<section id="mondo" class="mondo"><div class="wrap">
+  <div class="m-top">
+    <div>
+      <div class="m-kicker">🌍 Scenario internazionale · edizione quotidiana</div>
+      <h2 class="m-titolo" id="mTitolo">—</h2>
+      <div class="m-meta" id="mMeta"></div>
+    </div>
+    <div class="m-nav">
+      <button id="mPrev" title="Edizione precedente">◀</button>
+      <button id="mNext" title="Edizione successiva">▶</button>
+      <button id="mCopia" title="Copia la sintesi della giornata come testo">📋 Copia sintesi</button>
+    </div>
+  </div>
+  <div id="mCorpo"><div class="m-vuoto">Caricamento…</div></div>
+</div></section>
+<div id="mTip" role="tooltip"></div>
+<footer>Titoli, foto e link appartengono alle rispettive testate · <span class="solo-s">rassegna generata automaticamente da feed pubblici e Google News · aggiornata ogni ora</span><span class="solo-m">scenario internazionale costruito dai feed della stampa italiana ed estera · una edizione al giorno, al mattino</span></footer>
 <button id="top" title="Torna su">↑</button>
 <div class="toast" id="toast"></div>
 
@@ -245,6 +361,8 @@ kbd{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:12px;font
   </ul>
   <h4>Come sono organizzate</h4>
   <p>Ogni notizia viene assegnata a una provincia e a un argomento in base alle parole del titolo. Quando più testate danno la stessa notizia, la rassegna mostra quella della testata maggiore e sotto elenca le altre in "Anche su".</p>
+  <h4>🌍 Internazionale</h4>
+  <p>Il pulsante <i>🌍 Internazionale</i> in alto apre lo scenario dal mondo: una edizione al giorno, preparata al mattino con le notizie delle 24 ore precedenti da una ventina di testate italiane ed estere. Mostra quanto spazio prende ogni area e ogni tema, le storie riprese da più testate (e come le titola ciascuna), le parole in ascesa, quelle stabili al centro e quelle in uscita rispetto ai giorni prima, e il confronto fra stampa italiana ed estera.</p>
   <h4>Ultime raccolte</h4>
   <p>La rassegna si aggiorna da due parti: <b>GitHub</b>, che lavora sempre anche a computer spento, e il <b>Mac</b> di Marcello quando è acceso.</p>
   <div id="battito" style="font-size:13px"></div>
@@ -280,10 +398,15 @@ const fmtG=g=>new Date(g+"T12:00").toLocaleDateString("it-IT",{weekday:"long",da
 const iso=d=>d.toLocaleDateString("sv-SE");
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2000)};
 const idOf=n=>n.id||n.link;
+const perData=(a,b)=>a.data<b.data?1:a.data>b.data?-1:0;   // più recenti prima
 const inLista=n=>Object.keys(liste).filter(l=>liste[l][idOf(n)]);
 
+/* ogni giorno ha una versione (in stato.json): i giorni che non sono cambiati
+   arrivano dalla memoria del browser invece di essere riscaricati */
+let versioni={};
 async function carica(g){
-  if(!cache[g]) cache[g]=fetch("data/"+g+".json?v="+Date.now()).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if(!cache[g]) cache[g]=fetch("data/"+g+".json"+(versioni[g]?"?v="+versioni[g]:""),versioni[g]?{}:{cache:"no-cache"})
+    .then(r=>r.ok?r.json():[]).catch(()=>[]);
   return cache[g];
 }
 const giorniNelRange=()=>giorni.filter(g=>g>=S.dal&&g<=S.al);
@@ -301,6 +424,8 @@ async function aggiorna(){
 }
 
 function base(){ return S.vista ? Object.values(liste[S.vista]||{}) : news }
+const testi=new WeakMap();   // testo in minuscolo per la ricerca, calcolato una volta per notizia
+const testo=n=>{let t=testi.get(n);if(t==null)testi.set(n,t=(n.titolo+" "+n.desc+" "+n.fonte).toLowerCase());return t};
 function filtrate(){
   const parts=S.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const limite=S.ore?Date.now()-S.ore*3600000:0;
@@ -310,16 +435,23 @@ function filtrate(){
     if(S.arg.size&&!S.arg.has(n.argomento))return false;
     if(S.fonte&&n.fonte!==S.fonte)return false;
     if(S.nasc&&lette.has(idOf(n)))return false;
-    if(parts.length){const t=(n.titolo+" "+n.desc+" "+n.fonte).toLowerCase();if(!parts.every(p=>t.includes(p)))return false}
+    if(parts.length){const t=testo(n);if(!parts.every(p=>t.includes(p)))return false}
     return true;
   });
 }
-function hl(s){s=esc(s);if(!S.q.trim())return s;for(const p of S.q.trim().split(/\s+/)){if(p.length<2)continue;s=s.replace(new RegExp("("+p.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>")}return s}
+let reQ=null, reQper="";   // evidenziazione: un'unica espressione per ricerca, non una per scheda
+function hl(s){
+  s=esc(s);
+  if(reQper!==S.q){reQper=S.q;const p=S.q.trim().split(/\s+/).filter(p=>p.length>1).sort((a,b)=>b.length-a.length);
+    reQ=p.length?new RegExp("("+p.map(x=>esc(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi"):null}
+  return reQ?s.replace(reQ,"<mark>$1</mark>"):s;
+}
 
 function card(n){
   const [ico,c1,c2]=ARG[n.argomento]||ARG["Altre notizie"];
   const ora=new Date(n.data).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  const img=n.img?`<div class="img" style="background-image:url('${esc(n.img)}')"></div>`:`<div class="img ph" style="--c1:${c1};--c2:${c2}">${ico}</div>`;
+  // loading=lazy: la foto si scarica solo quando la scheda sta per comparire sullo schermo
+  const img=n.img?`<div class="img"><img src="${esc(n.img)}" alt="" loading="lazy" decoding="async" onerror="rotta(this)"></div>`:`<div class="img ph" style="--c1:${c1};--c2:${c2}">${ico}</div>`;
   const also=n.anche?.length?`<div class="also">Anche su: ${n.anche.map(a=>`<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.fonte)}</a>`).join(", ")}</div>`:"";
   const salvata=inLista(n).length;
   return `<article class="card ${lette.has(idOf(n))?"read":""}" data-id="${esc(idOf(n))}">${img}<div class="body">
@@ -334,7 +466,35 @@ function card(n){
     <button data-a="read" title="Segna come letta o da leggere">✓</button>
   </div></div></article>`;
 }
+function rotta(i){const d=i.parentElement;d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"}
 const gruppi=(l,k,ord)=>{const m={};l.forEach(n=>(m[n[k]]??=[]).push(n));return (ord||Object.keys(m)).filter(x=>m[x]).map(x=>[x,m[x]])};
+
+/* Le schede si disegnano a blocchi, solo quando stanno per entrare nello schermo:
+   anche con migliaia di notizie (7 o 30 giorni) la pagina resta leggera.
+   48 schede per blocco: si divide per 1, 2, 3 e 4 colonne, quindi le righe restano piene. */
+const BLOCCO=48;
+let blocchi=[];
+const osserva=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)riempi(e.target)}),{rootMargin:"1500px 0px"});
+function stima(n){   // altezza provvisoria del blocco, finché non è disegnato
+  const w=Math.min(innerWidth,1240)-32;
+  if(!S.griglia)return n*120;
+  const col=Math.max(1,Math.floor((w+15)/280)), cw=(w-15*(col-1))/col;
+  return Math.ceil(n/col)*(cw*9/16+200)-15;
+}
+function griglia(l){
+  let h="";
+  for(let i=0;i<l.length;i+=BLOCCO){
+    const pezzo=l.slice(i,i+BLOCCO);
+    h+=`<div class="grid" data-b="${blocchi.push(pezzo)-1}" style="min-height:${Math.round(stima(pezzo.length))}px"></div>`;
+  }
+  return h;
+}
+function riempi(g){
+  const l=g.isConnected&&blocchi[g.dataset.b];if(!l)return;
+  blocchi[g.dataset.b]=null;osserva.unobserve(g);
+  g.innerHTML=l.map(card).join("");g.removeAttribute("data-b");g.style.minHeight="";
+}
+addEventListener("beforeprint",()=>$$("#out .grid[data-b]").forEach(riempi));   // in stampa servono tutte
 
 function render(){
   const f=filtrate();
@@ -354,21 +514,27 @@ function render(){
   if(f.length&&f.length<15&&!S.vista&&!S.q&&!S.prov.size&&!S.arg.size&&!S.fonte)
     $("#stats").innerHTML+=` <span class="pill" style="background:#f6d6a8;color:#5a3a00">⚠️ Poche notizie per questo giorno: la raccolta automatica è in ritardo, riprova tra poco</span>`;
   if(!f.length){$("#out").innerHTML=`<div class="empty"><b>Nessuna notizia qui</b>${S.vista?"Aggiungi notizie con il pulsante ✚":S.ore?"In questa fascia oraria non è ancora arrivato nulla: prova con \"Oggi\".":"Prova ad allargare il periodo o a togliere qualche filtro."}</div>`;salvaHash();return}
-  f.sort((a,b)=>b.data.localeCompare(a.data));
+  f.sort(perData);
   let h="";
-  if(S.ord==="cron")h=`<div class="grid">${f.map(card).join("")}</div>`;
-  else if(S.ord==="arg")for(const [a,l] of gruppi(f,"argomento",Object.keys(ARG)))h+=`<h2 class="prov">${ARG[a][0]} ${a} <span>${l.length}</span></h2><div>${`<div class="grid">${l.map(card).join("")}</div>`}</div>`;
+  blocchi=[];osserva.disconnect();
+  if(S.ord==="cron")h=griglia(f);
+  else if(S.ord==="arg")for(const [a,l] of gruppi(f,"argomento",Object.keys(ARG)))h+=`<h2 class="prov">${ARG[a][0]} ${a} <span>${l.length}</span></h2><div>${griglia(l)}</div>`;
   else for(const [p,l] of gruppi(f,"provincia",PROV)){
     h+=`<section><h2 class="prov" title="Tocca per chiudere la sezione">${p==="Sicilia"?"Sicilia · regionale":"Provincia di "+p} <span>${l.length}</span></h2><div>`;
-    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG)))h+=`<h3 class="arg">${ARG[a][0]} ${a} · ${la.length}</h3><div class="grid">${la.map(card).join("")}</div>`;
+    for(const [a,la] of gruppi(l,"argomento",Object.keys(ARG)))h+=`<h3 class="arg">${ARG[a][0]} ${a} · ${la.length}</h3>${griglia(la)}`;
     h+="</div></section>";
   }
   $("#out").innerHTML=h;
+  // subito i blocchi già sullo schermo (niente pagina vuota), gli altri quando ci si arriva
+  for(const g of $$("#out .grid[data-b]")){
+    const r=g.getBoundingClientRect();
+    if(r.bottom>-1500&&r.top<innerHeight+1500)riempi(g);else osserva.observe(g);
+  }
   salvaHash();
 }
 
 function testoRassegna(lista){
-  const f=(lista?Object.values(liste[lista]):filtrate()).sort((a,b)=>b.data.localeCompare(a.data)), gs=giorniNelRange();
+  const f=(lista?Object.values(liste[lista]):filtrate()).sort(perData), gs=giorniNelRange();
   let t=`📰 *RASSEGNA SICILIA* — ${lista?"lista "+lista:(gs.length===1?fmtG(gs[0]):`${S.dal} → ${S.al}`)}\n`;
   for(const [p,l] of gruppi(f,"provincia",PROV)){
     t+=`\n🍋 *${p.toUpperCase()}*\n`;
@@ -399,6 +565,7 @@ function apriLista(l){S.vista=l;dListe.close();scrollTo({top:0});render()}
 
 /* ---- stato nell'indirizzo ---- */
 function salvaHash(){
+  if(vm())return;                    // l'indirizzo appartiene alla sezione Internazionale
   const p=new URLSearchParams();
   p.set("dal",S.dal);p.set("al",S.al);
   if(S.ore)p.set("ore",S.ore);
@@ -500,9 +667,8 @@ $("#fileIn").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t
 $("#bAggiorna").onclick=async()=>{
   const b=$("#bAggiorna"), prima=news.length, t0=Date.now();
   b.disabled=true; b.classList.add("gira"); b.textContent="↻ Controllo…";
-  giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni);
-  cache={};                                   // svuota la copia in memoria
-  await statoAggiornamento();
+  [giorni]=await Promise.all([fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>giorni),statoAggiornamento()]);
+  cache={};                                   // svuota la copia in memoria (i giorni non cambiati tornano dalla cache del browser)
   await aggiorna();
   const nuove=news.length-prima, min=ritardoMinuti();
   await new Promise(r=>setTimeout(r,Math.max(0,600-(Date.now()-t0))));   // il riscontro si deve vedere
@@ -533,12 +699,12 @@ $("#bAiuto").onclick=()=>{
     : "<p>Nessun dato sulle raccolte precedenti.</p>";$("#guida").classList.remove("hidden");store.set("guidaChiusa",0);$("#fontiDirette").innerHTML=DIRETTE.map(([n,u])=>`<div><a href="${u}" target="_blank" rel="noopener">${n}</a></div>`).join("");dAiuto.showModal()};
 document.addEventListener("keydown",e=>{
   if(e.target.matches("input,select,textarea"))return;
+  if(vm()){if(e.key==="ArrowLeft")mSposta(-1);if(e.key==="ArrowRight")mSposta(1);return}
   if(e.key==="/"){e.preventDefault();$("#q").focus()}
   if(e.key==="ArrowLeft")sposta(-1);if(e.key==="ArrowRight")sposta(1);
 });
 addEventListener("scroll",()=>$("#top").style.display=scrollY>600?"block":"none");
 $("#top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
-new MutationObserver(()=>$$(".img:not(.ph):not([data-ok])").forEach(d=>{d.dataset.ok=1;const u=d.style.backgroundImage.slice(5,-2);const i=new Image();i.onerror=()=>{d.classList.add("ph");d.style.cssText="--c1:#8a8378;--c2:#c3bbae";d.textContent="📰"};i.src=u})).observe($("#out"),{childList:true,subtree:true});
 
 const tempoFa=m=>m<1?"adesso":m===1?"1 minuto fa":m<60?m+" minuti fa":
   m<120?"1 ora fa":m<1440?Math.round(m/60)+" ore fa":m<2880?"ieri":Math.round(m/1440)+" giorni fa";
@@ -547,6 +713,7 @@ const ritardoMinuti=()=>ultimoAgg?Math.round((Date.now()-ultimoAgg)/60000):0;
 async function statoAggiornamento(){
   try{
     const s=await fetch("data/stato.json?v="+Date.now()).then(r=>r.json());
+    versioni=s.versioni||{};
     ultimoAgg=new Date(s.aggiornato);
     const min=ritardoMinuti();
     const q=min<90?"":min<240?" ⚠️":" ⚠️";
@@ -556,12 +723,179 @@ async function statoAggiornamento(){
     if(min>240)$("#statoAgg").title="Il raccoglitore automatico è in ritardo: le notizie più recenti potrebbero mancare.";
   }catch{}
 }
+/* ================= Internazionale: una edizione al giorno, per l'analisi di fase ================= */
+const vm=()=>document.body.classList.contains("vmondo");
+let M={indice:null,serie:null,g:"",e:null,voluto:""}, tips=[];   // voluto: l'ultima edizione chiesta
+const num=v=>(+v).toLocaleString("it-IT",{maximumFractionDigits:1});
+const pct=v=>v==null?"—":(+v).toLocaleString("it-IT",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+const fmtLungo=g=>{const s=fmtG(g);return s[0].toUpperCase()+s.slice(1)};
+const jm=u=>fetch("data/mondo/"+u,{cache:"no-cache"}).then(r=>r.ok?r.json():null).catch(()=>null);
+
+async function apriMondo(g,push){
+  document.body.classList.add("vmondo");
+  const h="#mondo"+(g?"="+g:"");
+  if(push)history.pushState({daSicilia:true},"",h);else history.replaceState(history.state,"",h);
+  scrollTo({top:0});
+  await mCarica(g);
+}
+function chiudiMondo(){
+  document.body.classList.remove("vmondo");$("#mTip").style.display="none";
+  if(!siciliaAvviata)avviaSicilia();else render();
+  scrollTo({top:0});
+}
+$("#bMondo").onclick=()=>{
+  if(!vm())apriMondo("",true);
+  else if(history.state?.daSicilia)history.back();            // torna dove si era, filtri compresi
+  else{history.replaceState(null,"",location.pathname+location.search);chiudiMondo()}
+};
+addEventListener("popstate",()=>{
+  if(location.hash.startsWith("#mondo"))apriMondo(location.hash.split("=")[1]||"",false);else if(vm())chiudiMondo();
+});
+async function mCarica(g){
+  if(!M.indice){[M.indice,M.serie]=await Promise.all([jm("index.json"),jm("serie.json")]);M.indice=M.indice||[]}
+  if(!M.indice.length){
+    $("#mTitolo").textContent="In preparazione";$("#mMeta").textContent="";$("#mPrev").disabled=$("#mNext").disabled=true;
+    $("#mCorpo").innerHTML=`<div class="m-vuoto"><b>La prima edizione arriva al mattino</b>Lo scenario internazionale si prepara una volta al giorno, alla prima raccolta dopo le 6, con le notizie delle 24 ore precedenti.</div>`;
+    return;
+  }
+  if(!M.indice.includes(g))g=M.indice[0];
+  M.voluto=g;
+  if(M.g!==g||!M.e){
+    $("#mCorpo").style.opacity=.5;
+    const e=await jm(g+".json");
+    if(M.voluto!==g)return;          // nel frattempo è stata chiesta un'altra edizione: questa si scarta
+    M.e=e;M.g=g;$("#mCorpo").style.opacity="";
+  }
+  if(vm())history.replaceState(history.state,"","#mondo"+(g===M.indice[0]?"":"="+g));
+  mRender();
+}
+function mSposta(d){
+  const i=M.indice?M.indice.indexOf(M.voluto||M.g):-1;if(i<0)return;
+  if(!M.indice[i-d]){toast(d>0?"È l'edizione più recente":"L'archivio inizia qui");return}
+  mCarica(M.indice[i-d]);
+}
+// andamento fino all'edizione mostrata (al massimo 30) e media delle 7 precedenti
+function mSerie(tipo,k){
+  const s=M.serie,fino=s?s.giorni.indexOf(M.g):-1;if(fino<0)return[];
+  return (s[tipo][k]||[]).slice(Math.max(0,fino-29),fino+1);
+}
+function mMedia(tipo,k){const v=mSerie(tipo,k).slice(0,-1).slice(-7);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+const delta=(oggi,media)=>media==null?"—":Math.abs(oggi-media)<.5?"= stabile":(oggi>media?"▲ ":"▼ ")+num(Math.abs(oggi-media))+" pt";
+function spark(v){
+  if(v.length<2)return`<svg class="m-spark" aria-hidden="true"></svg>`;
+  const W=78,H=24,p=5,mx=Math.max(...v,1),x=i=>(p+(W-2*p)*i/(v.length-1)).toFixed(1),y=a=>(H-p-(H-2*p)*a/mx).toFixed(1);
+  return`<svg class="m-spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${v.map((a,i)=>x(i)+","+y(a)).join(" ")}"/><circle cx="${x(v.length-1)}" cy="${y(v.at(-1))}" r="4"/></svg>`;
+}
+// tooltip: righe [valore, etichetta]; anche da tastiera. Il testo entra con textContent.
+const tip=righe=>` data-t="${tips.push(righe)-1}" tabindex="0"`;
+function mostraTip(el,x,y){
+  const r=tips[el.dataset.t],t=$("#mTip");if(!r)return;
+  t.replaceChildren(...r.map(([v,l])=>{const d=document.createElement("div"),b=document.createElement("b");b.textContent=v;d.append(b);
+    if(l!=null){const s=document.createElement("span");s.textContent=l;d.append(s)}return d}));
+  t.style.display="block";const w=t.offsetWidth,h=t.offsetHeight;
+  t.style.left=Math.max(8,Math.min(innerWidth-w-8,x+14))+"px";t.style.top=(y+h+24>innerHeight?y-h-12:y+14)+"px";
+}
+$("#mCorpo").addEventListener("pointermove",e=>{const el=e.target.closest("[data-t]");if(el)mostraTip(el,e.clientX,e.clientY);else $("#mTip").style.display="none"});
+$("#mCorpo").addEventListener("pointerleave",()=>$("#mTip").style.display="none");
+$("#mCorpo").addEventListener("focusin",e=>{const el=e.target.closest("[data-t]");if(el){const r=el.getBoundingClientRect();mostraTip(el,r.left+r.width/2,r.bottom)}});
+$("#mCorpo").addEventListener("focusout",()=>$("#mTip").style.display="none");
+
+function mTabella(){   // i numeri dei grafici, per chi preferisce leggerli
+  const s=M.serie,fino=s?s.giorni.indexOf(M.g):-1;if(fino<0)return"";
+  const da=Math.max(0,fino-9),gs=s.giorni.slice(da,fino+1);
+  const righe=tipo=>Object.keys(s[tipo]).map(k=>`<tr><td>${esc(k)}</td>${gs.map((g,i)=>`<td>${num(s[tipo][k][da+i]??0)}</td>`).join("")}</tr>`).join("");
+  const testa=n=>`<tr><th>${n}</th>${gs.map(g=>`<th>${g.slice(8)}/${g.slice(5,7)}</th>`).join("")}</tr>`;
+  return`<details class="m-tab"><summary>Vedi i dati in tabella (quote % delle ultime ${gs.length} edizioni)</summary><div class="scorri"><table><thead>${testa("Area")}</thead><tbody>${righe("aree")}${testa("Tema")}${righe("temi")}</tbody></table></div></details>`;
+}
+// le aperture di ciascuna stampa: storie ordinate per quante testate di quel gruppo le riprendono,
+// ognuna col titolo di una testata di quel gruppo (la stessa vicenda può stare in tutte e due)
+const quante=(s,st)=>st==="it"?s.it:s.n-s.it;
+const aperture=(e,st)=>e.storie.filter(s=>quante(s,st)>0).sort((a,b)=>quante(b,st)-quante(a,st)||b.n-a.n);
+const testa=(s,st)=>s.testate.find(a=>a.stampa===st)||s.testate[0];
+function mRender(){
+  const e=M.e;tips=[];
+  if(!e){$("#mCorpo").innerHTML=`<div class="m-vuoto"><b>Edizione non disponibile</b>Riprova tra poco.</div>`;return}
+  const i=M.indice.indexOf(M.g),prima=Math.min(e.edizioni_prima||0,7);
+  $("#mPrev").disabled=!M.indice[i+1];$("#mNext").disabled=i<=0;
+  $("#mTitolo").textContent=fmtLungo(e.giorno);
+  const ora=new Date(e.generato).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Rome"});
+  $("#mMeta").textContent=`${e.articoli.toLocaleString("it-IT")} articoli da ${e.testate} testate nelle ${e.ore} ore precedenti · edizione delle ${ora}`+(i===0?" · la prossima domattina":"");
+  const aree=Object.entries(e.aree).sort((a,b)=>b[1]-a[1]),temi=Object.entries(e.temi).sort((a,b)=>b[1]-a[1]);
+  const P=e.parole,top=P.ascesa[0]||P.oggi[0];
+  const riga=(tipo,[k,v],max)=>{
+    const m=mMedia(tipo,k),extra=tipo==="aree"?[[pct(e.aree_it[k]),"stampa italiana"],[pct(e.aree_estero[k]),"stampa estera"]]:[];
+    return`<div class="m-riga"${tip([[k],[pct(v),"oggi"],[m==null?"—":pct(m),"media edizioni precedenti"],...extra])}><span>${esc(k)}</span>
+      <span class="m-barra"><i style="width:${(80*v/max).toFixed(1)}%"></i><em>${pct(v)}</em></span><span class="m-delta">${delta(v,m)}</span>${spark(mSerie(tipo,k))}</div>`;
+  };
+  const storia=st=>s=>{const t=testa(s,st),altre=s.testate.filter(a=>a!==t);
+    return`<li><div><a href="${esc(t.link)}" target="_blank" rel="noopener">${esc(t.titolo)}</a>
+    <div class="m-sm">${esc(t.fonte)} · ${s.n===1?"1 testata":`${s.n} testate (${s.it} italiane, ${s.n-s.it} estere)`}${s.area?" · "+esc(s.area):""}${s.tema?" · "+esc(s.tema):""}</div>
+    ${altre.length?`<details><summary>Come la titolano le altre testate (${altre.length})</summary><ul>${altre.map(a=>`<li><b>${esc(a.fonte)}</b> — <a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.titolo)}</a></li>`).join("")}</ul></details>`:""}</div></li>`};
+  const chip=(p,nota)=>`<span${tip([[p.parola],[String(p.oggi),"articoli oggi"],[num(p.quota),"ogni 100 articoli, oggi"],...(prima?[[num(p.prima),"ogni 100 articoli, prima"]]:[])])}>${esc(p.parola)}<small>${nota(p)}</small></span>`;
+  const chips=(l,nota,vuoto)=>l.length?l.map(p=>chip(p,nota)).join(""):`<span>${vuoto}</span>`;
+  const conf=Object.keys(e.aree).map(k=>[k,e.aree_it[k]||0,e.aree_estero[k]||0]).sort((a,b)=>(b[1]-b[2])-(a[1]-a[2]));
+  const mx=Math.max(1,...conf.flatMap(c=>[c[1],c[2]])),X=v=>(3+94*v/mx).toFixed(1)+"%";
+  let h=`<div class="m-kpi">
+    <div class="m-tile"><small>Articoli analizzati</small><b>${e.articoli.toLocaleString("it-IT")}</b><span>${e.stampa.it} dalla stampa italiana, ${e.stampa.estero} dall'estero</span></div>
+    <div class="m-tile"><small>Area al centro</small><b>${esc(aree[0][0])}</b><span>${pct(aree[0][1])} dell'attenzione</span></div>
+    <div class="m-tile"><small>Tema dominante</small><b>${esc(temi[0][0])}</b><span>${pct(temi[0][1])} degli articoli con un tema</span></div>
+    <div class="m-tile"><small>${P.ascesa[0]?"In maggiore ascesa":"Parola del giorno"}</small><b>${esc(top?top.parola:"—")}</b><span>${!top?"":P.ascesa[0]?(top.prima?`da ${num(top.prima)} a ${num(top.quota)} ogni 100 articoli`:"nuova nell'agenda"):`in ${top.oggi} articoli`}</span></div>
+  </div>
+  <div class="m-griglia"><div class="m-col">
+    <div class="m-card" id="cAgenda"><h3>L'agenda del giorno</h3>
+      <p class="m-sot">Quanto spazio prende ogni area · ${prima?`▲▼ rispetto alla media delle ${prima===1?"edizione precedente":prima+" edizioni precedenti"}`:"il confronto con i giorni prima parte dalla prossima edizione"}</p>
+      ${aree.map(a=>riga("aree",a,aree[0][1]||1)).join("")}
+      <p class="m-nota">Quota degli articoli attribuiti a un'area: chi ne nomina più d'una è diviso fra queste. Non attribuiti a nessuna area: ${pct(e.non_attribuiti)}. La linea a destra è l'andamento delle ultime edizioni.</p>
+      ${mTabella()}</div>
+    <div class="m-card" id="cAperture"><h3>Le aperture</h3><p class="m-sot">In ogni colonna, le storie riprese da più testate di quella stampa, ciascuna con il suo titolo</p>
+      <div class="m-colonne"><div><h4>Stampa italiana</h4><ol class="m-storie">${aperture(e,"it").slice(0,8).map(storia("it")).join("")}</ol></div>
+      <div><h4>Stampa estera</h4><ol class="m-storie">${aperture(e,"estero").slice(0,8).map(storia("estero")).join("")}</ol></div></div></div>
+    <div class="m-card" id="cAree"><h3>Area per area</h3><p class="m-sot">Le storie principali di ogni scacchiere</p><div class="m-aree">
+      ${aree.filter(([k])=>e.storie.some(s=>s.area===k)).map(([k,v])=>`<div class="m-area"><h4>${esc(k)}<span>${pct(v)}</span></h4><ul>${e.storie.filter(s=>s.area===k).slice(0,5).map(s=>`<li><a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.titolo)}</a><div class="m-sm">${esc(s.fonte)}${s.n>1?" · "+s.n+" testate":""}</div></li>`).join("")}</ul></div>`).join("")}
+    </div></div>
+  </div><div class="m-col">
+    <div class="m-card m-parole" id="cParole"><h3>Parole della fase</h3>
+      <p class="m-sot">${prima?"Cosa entra, cosa resta e cosa esce dall'agenda rispetto alle edizioni precedenti":"Le parole più presenti nei titoli di oggi"}</p>
+      ${prima?`<h4>▲ In ascesa</h4><div class="m-chips">${chips(P.ascesa,p=>p.prima?"×"+num(p.quota/p.prima):"nuova","nessuna")}</div>
+      <h4>● Stabili al centro</h4><div class="m-chips">${chips(P.stabili,p=>p.oggi,"servono almeno tre edizioni")}</div>
+      <h4>▼ In uscita</h4><div class="m-chips">${chips(P.calo,p=>"−"+Math.round(100*(1-p.quota/p.prima))+"%","nessuna")}</div>
+      <h4>Le più presenti oggi</h4>`:""}<div class="m-chips">${chips(P.oggi.slice(0,prima?15:30),p=>p.oggi,"—")}</div>
+      <p class="m-nota">Parole dei titoli, contate una volta per articolo: tutte quelle della stampa italiana, dalla stampa estera i nomi propri e le parole che ricorrono anche nei titoli italiani.</p></div>
+    <div class="m-card" id="cTemi"><h3>I temi</h3><p class="m-sot">Di cosa si parla · quota sugli articoli con un tema</p>${temi.map(t=>riga("temi",t,temi[0][1]||1)).join("")}</div>
+    <div class="m-card" id="cConfronto"><h3>Stampa italiana e stampa estera</h3><p class="m-sot">Dove la stampa italiana guarda più, o meno, di quella estera</p>
+      <div class="m-legenda"><span><i style="background:var(--s1)"></i>Stampa italiana</span><span><i style="background:var(--s2)"></i>Stampa estera</span></div>
+      ${conf.map(([k,a,b])=>`<div class="m-db"${tip([[k],[pct(a),"stampa italiana"],[pct(b),"stampa estera"]])}><span>${esc(k)}</span>
+        <svg aria-hidden="true"><line x1="${X(Math.min(a,b))}" x2="${X(Math.max(a,b))}" y1="10" y2="10"/><circle cx="${X(b)}" cy="10" r="5" fill="var(--s2)"/><circle cx="${X(a)}" cy="10" r="5" fill="var(--s1)"/></svg>
+        <span class="m-delta">${Math.abs(a-b)<.5?"in linea":(a>b?"Italia +":"estero +")+num(Math.abs(a-b))}</span></div>`).join("")}</div>
+    <div class="m-card" id="cFonti"><h3>Le fonti</h3><p class="m-sot">Articoli letti per testata in questa edizione</p>
+      <div class="m-fonti">${e.fonti.map(([n,,c])=>`<div${c?"":' class="ko"'}><span>${esc(n)}</span><span>${c||"non raggiunta"}</span></div>`).join("")}</div></div>
+  </div></div>`;
+  $("#mCorpo").innerHTML=h;
+}
+function mTesto(){
+  const e=M.e;if(!e)return"";
+  let t=`🌍 *SCENARIO INTERNAZIONALE* — ${fmtLungo(e.giorno)}\n(${e.articoli} articoli da ${e.testate} testate, ultime ${e.ore} ore)\n\n*L'agenda*\n`;
+  for(const [k,v] of Object.entries(e.aree).sort((a,b)=>b[1]-a[1])){const m=mMedia("aree",k);t+=`• ${k}: ${pct(v)}${m==null?"":` (${delta(v,m)})`}\n`}
+  const P=e.parole,l=a=>a.slice(0,10).map(p=>p.parola).join(", ");
+  if(P.ascesa.length)t+=`\n*In ascesa:* ${l(P.ascesa)}\n`;
+  if(P.stabili.length)t+=`*Stabili al centro:* ${l(P.stabili)}\n`;
+  if(P.calo.length)t+=`*In uscita:* ${l(P.calo)}\n`;
+  const ap=(tit,st)=>{const l=aperture(e,st).slice(0,6);return l.length?`\n*${tit}*\n`+l.map((s,i)=>{const a=testa(s,st);const q=quante(s,st);return`${i+1}. ${a.titolo} (${a.fonte}; ${q} ${q===1?"testata":"testate"} ${st==="it"?(q===1?"italiana":"italiane"):(q===1?"estera":"estere")})\n   ${a.link}`}).join("\n")+"\n":""};
+  return t+ap("Aperture della stampa italiana","it")+ap("Aperture della stampa estera","estero");
+}
+$("#mCopia").onclick=()=>copia(mTesto());
+$("#mPrev").onclick=()=>mSposta(-1);$("#mNext").onclick=()=>mSposta(1);
+
+let siciliaAvviata=false;
+async function avviaSicilia(){
+  siciliaAvviata=true;
+  [giorni]=await Promise.all([fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]),statoAggiornamento()]);
+  if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
+  if(location.hash.length>1&&!location.hash.startsWith("#mondo")){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");
+}
 (async()=>{
   etichettaListe();
-  statoAggiornamento();
-  giorni=await fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]);
-  if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
-  if(location.hash.length>1){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");
+  if(location.hash.startsWith("#mondo"))apriMondo(location.hash.split("=")[1]||"",false);else avviaSicilia();
 })();
 </script>
 </body>
