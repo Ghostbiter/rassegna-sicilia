@@ -30,13 +30,18 @@ GN = "https://news.google.com/rss/headlines/section/topic/WORLD?"
 FEED = [
  ("ANSA", "https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml", "it", "it"),
  ("Rai News", "https://www.rainews.it/rss/esteri", "it", "it"),
- ("Corriere della Sera", "https://xml2.corriereobjects.it/rss/esteri.xml", "it", "it"),
  ("la Repubblica", "https://www.repubblica.it/rss/esteri/rss2.0.xml", "it", "it"),
+ ("La Stampa", "https://www.lastampa.it/esteri/rss", "it", "it"),
  ("Il Sole 24 Ore", "https://www.ilsole24ore.com/rss/mondo.xml", "it", "it"),
  ("AGI", "https://www.agi.it/estero/rss", "it", "it"),
+ ("Adnkronos", "https://www.adnkronos.com/RSS_Esteri.xml", "it", "it"),
  ("Il Post", "https://www.ilpost.it/mondo/feed/", "it", "it"),
- ("Il Fatto Quotidiano", "https://www.ilfattoquotidiano.it/mondo/feed/", "it", "it"),
+ ("Il Fatto Quotidiano", "https://www.ilfattoquotidiano.it/category/mondo/feed/", "it", "it"),
  ("Internazionale", "https://www.internazionale.it/sitemaps/rss.xml", "it", "it"),
+ ("il manifesto", "https://ilmanifesto.it/feed", "it", "it"),          # feed unico: si tengono solo gli esteri
+ ("HuffPost Italia", "https://www.huffingtonpost.it/esteri/rss", "it", "it"),
+ ("Tgcom24", "https://www.tgcom24.mediaset.it/rss/mondo.xml", "it", "it"),
+ ("Limes", "https://www.limesonline.com/rss", "it", "it"),
  ("BBC News", "https://feeds.bbci.co.uk/news/world/rss.xml", "en", "estero"),
  ("The Guardian", "https://www.theguardian.com/world/rss", "en", "estero"),
  ("The New York Times", "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "en", "estero"),
@@ -48,10 +53,16 @@ FEED = [
  ("NPR", "https://feeds.npr.org/1004/rss.xml", "en", "estero"),
  ("DW", "https://rss.dw.com/xml/rss-en-world", "en", "estero"),
  ("South China Morning Post", "https://www.scmp.com/rss/91/feed", "en", "estero"),
+ ("Euronews", "https://it.euronews.com/rss?format=mrss&level=theme&name=news", "it", "estero"),   # in italiano, ma non è stampa italiana
  # Google News "Mondo": aggiunge le altre testate (la fonte vera è nel titolo)
  ("GN it", GN + "hl=it&gl=IT&ceid=IT:it", "it", "it"),
  ("GN en", GN + "hl=en-US&gl=US&ceid=US:en", "en", "estero"),
 ]
+
+NOMI = {"GN it": "Google News · Italia", "GN en": "Google News · internazionale"}   # come compaiono sul sito
+
+# testate con un feed unico per tutte le notizie: si tengono solo gli articoli che parlano di esteri
+SOLO_ESTERI = {"il manifesto"}
 
 # Parole chiave. Minuscole = senza distinzione di maiuscole, parola intera; "*" in fondo =
 # qualunque finale (negoziat* prende negoziato, negoziati...); con una maiuscola = esattamente
@@ -220,6 +231,8 @@ FRASI = [(re.compile(a, re.I), b) for a, b in [
  (r"\bcorea del nord\b|\bnorth korea\b|\bcorée du nord\b", "CoreaDelNord"),
  (r"\bcorea del sud\b|\bsouth korea\b|\bcorée du sud\b", "CoreaDelSud"),
  (r"\bintelligenza artificiale\b|\bartificial intelligence\b|\bintelligence artificielle\b", "IntelligenzaArtificiale"),
+ (r"\bestrema destra\b|\bfar[- ]right\b|\bextrême droite\b|\bextrema derecha\b|\bultraderecha\b", "EstremaDestra"),
+ (r"\bestrema sinistra\b|\bfar[- ]left\b|\bextrême gauche\b|\bextrema izquierda\b", "EstremaSinistra"),
  (r"\bhong kong\b", "HongKong"), (r"\bxi jinping\b", "Xi"), (r"\bvon der leyen\b", "VonDerLeyen"),
 ]]
 SIGLE = {"US": "usa", "USA": "usa", "UE": "ue", "EU": "ue", "UN": "onu", "ONU": "onu", "UK": "regnounito",
@@ -252,7 +265,7 @@ SINONIMI = {"ukraine": "ucraina", "ucrania": "ucraina", "russie": "russia", "rus
 MOSTRA = {"usa": "Usa", "casabianca": "Casa Bianca", "ue": "Ue", "onu": "Onu", "cessateilfuoco": "cessate il fuoco",
           "mediooriente": "Medio Oriente", "regnounito": "Regno Unito", "coreadelnord": "Corea del Nord",
           "coreadelsud": "Corea del Sud", "intelligenzaartificiale": "intelligenza artificiale",
-          "hongkong": "Hong Kong", "xi": "Xi Jinping", "vonderleyen": "von der Leyen", "nato": "Nato"}
+          "hongkong": "Hong Kong", "estremadestra": "estrema destra", "estremasinistra": "estrema sinistra", "xi": "Xi Jinping", "vonderleyen": "von der Leyen", "nato": "Nato"}
 TENUTE = set(SIGLE.values())
 # parole valide in ogni lingua: nomi composti, sigle ed equivalenze
 COMUNI = TENUTE | set(SINONIMI.values()) | {b.lower() for _, b in FRASI}
@@ -292,9 +305,9 @@ def scarica(voce):
     ordine, (nome, url, lingua, stampa) = voce
     try:
         req = urllib.request.Request(url, headers=UA)
-        root = ET.fromstring(urllib.request.urlopen(req, timeout=20).read())
+        root = ET.fromstring(urllib.request.urlopen(req, timeout=20).read().lstrip())   # alcuni feed iniziano con una riga vuota
     except Exception as e:
-        print("ERR", nome, str(e)[:70]); return nome, []
+        print("ERR", nome, str(e)[:70]); return nome, None
     out = []
     for it in list(root.iter("item")) + list(root.iter(ATOM + "entry")):
         titolo = pulisci(it.findtext("title") or it.findtext(ATOM + "title"))
@@ -311,7 +324,12 @@ def scarica(voce):
         out.append({"titolo": titolo, "link": link, "fonte": fonte, "lingua": lingua, "stampa": stampa,
                     "data": data.astimezone(ROMA).isoformat(timespec="minutes"), "desc": desc[:300],
                     "_o": ordine, "_d": data})
-    print("ok ", nome, len(out)); return nome, out
+    if nome in SOLO_ESTERI:
+        out = [a for a in out if any(v for k, v in punteggi(a["titolo"] + " . " + a["desc"], R_AREE).items()
+                                     if k != "Italia nel mondo")]
+    if out: print("ok ", nome, len(out))
+    else: print("VUOTO", nome, "canale:", pulisci(root.findtext("channel/title") or root.findtext(ATOM + "title"))[:60])
+    return nome, out
 
 def chiave_testata(f):
     f = re.sub(r"^the\s+|\s+(news|online|\.it|\.com)$", "", f.lower().strip())
@@ -322,8 +340,10 @@ def primo(p, predefinito):
     k = max(p, key=p.get)
     return k if p[k] else predefinito
 
+simili = lambda comuni, jaccard: (comuni >= 2 and jaccard >= 1 / 3) or (comuni >= 3 and jaccard >= 0.2)
+
 def raggruppa(articoli):
-    """Stessa storia = almeno due parole importanti in comune e un terzo delle parole del titolo.
+    """Stessa storia = due parole importanti in comune su un terzo del titolo, o tre su un quinto.
     Ogni articolo si confronta solo con il titolo che apre il gruppo (niente catene)."""
     articoli.sort(key=lambda a: a["_d"], reverse=True)
     articoli.sort(key=lambda a: a["_o"])     # apre il gruppo la testata che viene prima, col pezzo più recente
@@ -332,7 +352,7 @@ def raggruppa(articoli):
         p = a["_p"]
         comuni = Counter(i for w in p for i in indice.get(w, ()))
         g = min((i for i, c in comuni.items()
-                 if c >= 2 and c / (len(p) + len(gruppi[i][0]["_p"]) - c) >= 1 / 3), default=None)
+                 if simili(c, c / (len(p) + len(gruppi[i][0]["_p"]) - c))), default=None)
         if g is None:
             for w in p: indice.setdefault(w, []).append(len(gruppi))
             gruppi.append([a])
@@ -354,19 +374,26 @@ def piu_comuni(conta, n):
 def quote(pesi, totale):
     return {k: round(100 * v / totale, 1) if totale else 0 for k, v in pesi.items()}
 
+def gia_fatta(f):
+    """L'edizione di oggi c'è ed è stata fatta con le testate di adesso. Se nel frattempo l'elenco
+    delle testate è cambiato, la si rifà una volta con quello nuovo."""
+    try: e = json.load(open(f, encoding="utf-8"))
+    except Exception: return False
+    return [x[0] for x in e.get("fonti", [])] == [NOMI.get(n, n) for n, *_ in FEED]
+
 def main():
     forza = "--forza" in sys.argv
     adesso = datetime.now(ROMA)
     oggi = adesso.date().isoformat()
     f_oggi = os.path.join(DIR, oggi + ".json")
-    if not forza and (os.path.exists(f_oggi) or adesso.hour < ORA):
+    if not forza and (adesso.hour < ORA or gia_fatta(f_oggi)):
         print("mondo: niente da fare (edizione di oggi già pronta, o prima delle %d)" % ORA); return
     with ThreadPoolExecutor(12) as ex:
         risultati = list(ex.map(scarica, enumerate(FEED)))
     inizio = adesso - timedelta(hours=FINESTRA)
     visti, articoli = set(), []
     for _, lst in risultati:
-        for a in lst:
+        for a in lst or ():
             k = (chiave_testata(a["fonte"]), re.sub(r"\W+", "", a["titolo"].lower()))
             if inizio <= a["_d"] <= adesso and k not in visti:
                 visti.add(k); articoli.append(a)
@@ -466,7 +493,6 @@ def main():
     media_aree = {k: round(sum(e.get(k, 0) for _, _, e in prima) / len(prima), 1) if prima else None for k in AREE}
 
     per_feed = Counter(a["_o"] for a in articoli)
-    nome_feed = {"GN it": "Google News · Italia", "GN en": "Google News · internazionale"}
     edizione = {
         "giorno": oggi, "generato": adesso.isoformat(timespec="minutes"), "ore": FINESTRA,
         "articoli": N, "testate": len({chiave_testata(a["fonte"]) for a in articoli}),
@@ -482,7 +508,9 @@ def main():
                    "ascesa": [fmt(k) for _, k in sorted(ascesa, reverse=True)[:15]],
                    "stabili": [fmt(k) for _, k in sorted(stabili, reverse=True)[:15]],
                    "calo": [fmt(k) for _, k in sorted(calo, reverse=True)[:15]]},
-        "fonti": [[nome_feed.get(f[0], f[0]), f[3], per_feed[i]] for i, f in enumerate(FEED)],
+        # testata, stampa, articoli nelle 24 ore, articoli nel feed (None = feed non raggiunto)
+        "fonti": [[NOMI.get(f[0], f[0]), f[3], per_feed[i], None if lst is None else len(lst)]
+                  for i, (f, (_, lst)) in enumerate(zip(FEED, risultati))],
         "conteggi": dict(piu_comuni(df, 400)),
     }
     # indice delle edizioni e serie per le tendenze. Il file del giorno si scrive per ultimo: è lui a
