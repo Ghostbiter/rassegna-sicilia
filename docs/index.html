@@ -868,7 +868,10 @@ function mRender(){
         <svg aria-hidden="true"><line x1="${X(Math.min(a,b))}" x2="${X(Math.max(a,b))}" y1="10" y2="10"/><circle cx="${X(b)}" cy="10" r="5" fill="var(--s2)"/><circle cx="${X(a)}" cy="10" r="5" fill="var(--s1)"/></svg>
         <span class="m-delta">${Math.abs(a-b)<.5?"in linea":(a>b?"Italia +":"estero +")+num(Math.abs(a-b))}</span></div>`).join("")}</div>
     <div class="m-card" id="cFonti"><h3>Le fonti</h3><p class="m-sot">Articoli letti per testata in questa edizione</p>
-      <div class="m-fonti">${e.fonti.map(([n,,c])=>`<div${c?"":' class="ko"'}><span>${esc(n)}</span><span>${c||"non raggiunta"}</span></div>`).join("")}</div></div>
+      <div class="m-fonti">${e.fonti.map(([n,,c,tot])=>{
+        // tot manca nelle prime edizioni: allora zero articoli vuol dire "non raggiunta"
+        const stato=c?c:tot===undefined||tot===null?"non raggiunta":tot?"nessuno nelle 24 ore":"feed vuoto";
+        return`<div${c?"":' class="ko"'}><span>${esc(n)}</span><span>${stato}</span></div>`}).join("")}</div></div>
   </div></div>`;
   $("#mCorpo").innerHTML=h;
 }
