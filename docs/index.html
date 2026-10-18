@@ -384,7 +384,7 @@ const GIORNALI=[
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const store={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{toast("Spazio esaurito sul dispositivo")}}};
 let giorni=[],cache={},news=[];
-let S={dal:"",al:"",q:"",fonte:"",ord:"prov",ore:0,prov:new Set(),arg:new Set(),griglia:!store.get("lista",false),nasc:false,vista:""};
+let S={dal:"",al:"",q:"",fonte:"",ord:"prov",ore:0,fissata:false,prov:new Set(),arg:new Set(),griglia:!store.get("lista",false),nasc:false,vista:""};
 let liste=store.get("liste",{"Preferiti":{}}), lette=new Set(store.get("lette",[]));
 if(!liste["Preferiti"])liste["Preferiti"]={};
 const salvaListe=()=>{store.set("liste",liste);etichettaListe()};
@@ -567,15 +567,22 @@ function apriLista(l){S.vista=l;dListe.close();scrollTo({top:0});render()}
 function salvaHash(){
   if(vm())return;                    // l'indirizzo appartiene alla sezione Internazionale
   const p=new URLSearchParams();
-  p.set("dal",S.dal);p.set("al",S.al);
+  // La data entra nell'indirizzo solo se scelta apposta: altrimenti chi salva il
+  // link (o lo mette sulla schermata iniziale) riaprirebbe per sempre quel giorno.
+  if(S.fissata){p.set("dal",S.dal);p.set("al",S.al);p.set("g","1")}
   if(S.ore)p.set("ore",S.ore);
   if(S.q)p.set("q",S.q);if(S.fonte)p.set("fonte",S.fonte);if(S.ord!=="prov")p.set("ord",S.ord);
   if(S.prov.size)p.set("prov",[...S.prov].join(","));if(S.arg.size)p.set("arg",[...S.arg].join(","));
-  history.replaceState(null,"","#"+p);
+  const base=location.pathname+location.search;      // "#" da solo non ripulisce: serve il percorso
+  history.replaceState(null,"", p.toString() ? base+"#"+p : base);
 }
 function leggiHash(){
   const p=new URLSearchParams(location.hash.slice(1));
-  if(p.get("dal"))S.dal=p.get("dal");if(p.get("al"))S.al=p.get("al");
+  if(p.get("g")==="1"){                       // data voluta: la rispetto
+    if(p.get("dal"))S.dal=p.get("dal");
+    if(p.get("al"))S.al=p.get("al");
+    S.fissata=true;
+  }else S.fissata=false;                      // nessuna data: si apre su oggi
   S.ore=+(p.get("ore")||0);
   S.q=p.get("q")||"";S.fonte=p.get("fonte")||"";S.ord=p.get("ord")||"prov";
   S.prov=new Set((p.get("prov")||"").split(",").filter(Boolean));S.arg=new Set((p.get("arg")||"").split(",").filter(Boolean));
@@ -586,6 +593,7 @@ function setRange(r){
   $$(".rng").forEach(b=>b.classList.toggle("on",b.dataset.r===r));
   S.vista="";
   S.ore=r==="h1"?1:r==="h3"?3:0;
+  S.fissata=(r==="ieri"||r==="7"||r==="30");
   if(r==="h1"||r==="h3"){
     const d=new Date(oggi+"T12:00");d.setDate(d.getDate()-1);
     S.dal=iso(d);S.al=oggi;
@@ -598,7 +606,7 @@ function setRange(r){
 function sposta(dir){
   const i=giorni.indexOf(S.al), j=i-dir;
   if(i<0||!giorni[j]){toast(dir>0?"Non ci sono giorni più recenti":"L'archivio inizia qui");return}
-  S.dal=S.al=giorni[j];S.vista="";S.ore=0;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna();
+  S.dal=S.al=giorni[j];S.vista="";S.ore=0;S.fissata=true;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna();
 }
 
 /* ---- eventi ---- */
@@ -606,8 +614,8 @@ $$(".rng").forEach(b=>b.onclick=()=>setRange(b.dataset.r));
 const mostraPeriodo=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.toggle("hidden")};
 $("#bPeriodo").onclick=mostraPeriodo;$("#bPeriodo2").onclick=mostraPeriodo;
 $("#etichettaData").onclick=()=>{$("#filtri").classList.add("aperto");$("#periodo").classList.remove("hidden");$("#dal").showPicker?.()};
-$("#dal").onchange=e=>{S.ore=0;S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
-$("#al").onchange=e=>{S.ore=0;S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#dal").onchange=e=>{S.ore=0;S.fissata=true;S.dal=e.target.value;if(S.al<S.dal)S.al=S.dal;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
+$("#al").onchange=e=>{S.ore=0;S.fissata=true;S.al=e.target.value;if(S.dal>S.al)S.dal=S.al;$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()};
 $("#prev").onclick=()=>sposta(-1);$("#next").onclick=()=>sposta(1);
 let tq;$("#q").oninput=e=>{clearTimeout(tq);tq=setTimeout(()=>{S.q=e.target.value;render()},200)};
 $("#fonte").onchange=e=>{S.fonte=e.target.value;render()};
@@ -894,7 +902,11 @@ async function avviaSicilia(){
   siciliaAvviata=true;
   [giorni]=await Promise.all([fetch("data/index.json?v="+Date.now()).then(r=>r.json()).catch(()=>[]),statoAggiornamento()]);
   if(giorni[0]){$("#dal").max=$("#al").max=giorni[0];$("#dal").min=$("#al").min=giorni.at(-1)}
-  if(location.hash.length>1&&!location.hash.startsWith("#mondo")){leggiHash();$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}else setRange("oggi");
+  if(location.hash.length>1&&!location.hash.startsWith("#mondo")){
+    leggiHash();
+    if(S.fissata){$$(".rng").forEach(b=>b.classList.remove("on"));aggiorna()}
+    else setRange("oggi");                   // filtri sì, data no: sempre la giornata di oggi
+  }else setRange("oggi");
 }
 (async()=>{
   etichettaListe();
